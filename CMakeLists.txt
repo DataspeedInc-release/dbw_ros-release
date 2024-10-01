@@ -34,6 +34,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BrakeReport.msg"
   "msg/DriverAssist.msg"
   "msg/EcuInfo.msg"
+  "msg/EyeTracker.msg"
   "msg/FuelLevel.msg"
   "msg/GearCmd.msg"
   "msg/GearDiagnostics.msg"
