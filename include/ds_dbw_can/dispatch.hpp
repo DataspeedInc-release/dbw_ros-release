@@ -837,7 +837,7 @@ struct MsgBrakeReport1 {
      */
     uint16_t input :12; // Interpretation changes with cmd_type, 4095=unknown
     uint8_t btsi :1;
-    uint8_t :1;
+    uint8_t yield_request :1; // Request throttle to yield to brakes
     uint8_t limiting_value :1;
     uint8_t limiting_rate :1;
     uint16_t cmd :12; // Interpretation changes with cmd_type, 4095=unknown
@@ -1245,7 +1245,7 @@ struct MsgBrakeReport3 {
     uint8_t degraded_comms_actuator :1;
     uint8_t degraded_comms_actuator_1 :1;
     uint8_t degraded_comms_actuator_2 :1;
-    uint8_t :1;
+    uint8_t degraded_bped_feedback :1;
     uint8_t degraded_vehicle_speed :1;
     uint8_t degraded_btsi_stuck_low :1;
     uint8_t degraded_btsi_stuck_high :1;
@@ -1435,7 +1435,8 @@ struct MsgThrtlReport1 {
     static constexpr size_t TIMEOUT_MS = 100;
     typedef MsgThrtlCmd::CmdType CmdType;
     uint16_t input :12; // 0.025 %, 4095=unknown
-    uint16_t :2;
+    uint16_t :1;
+    uint8_t yield_request :1; // Request brakes to yield to throttle
     uint8_t limiting_value :1;
     uint8_t limiting_rate :1;
     uint16_t cmd :12; // 0.025 %
@@ -1506,6 +1507,21 @@ struct MsgThrtlReport1 {
             out_pc = output * 0.025f;
         } else {
             out_pc = NAN;
+        }
+    }
+    float getPercentInput() const {
+        if (input != UINT16_MAX >> 4) {
+            return input * 0.025f;
+        } else {
+            return NAN;
+        }
+    }
+    uint16_t getPercentInputU16() const {
+        if (input != UINT16_MAX >> 4) {
+            constexpr uint16_t MAX = 100 / 0.025;
+            return std::min((input << 16) / MAX, UINT16_MAX - 1);
+        } else {
+            return UINT16_MAX;
         }
     }
     void setCrc() {
@@ -2126,6 +2142,10 @@ struct MsgSystemReport {
         FaultBrake             = 0x19,
         FaultThrtl             = 0x1A,
         FaultGear              = 0x1B,
+        BadCrcRcCmdSteer       = 0x1C,
+        BadCrcRcCmdBrake       = 0x1D,
+        BadCrcRcCmdThrtl       = 0x1E,
+        BadCrcCmdGear          = 0x1F,
         OverrideActiveSteer    = 0x20,
         OverrideActiveBrake    = 0x21,
         OverrideActiveThrtl    = 0x22,
@@ -2199,6 +2219,10 @@ struct MsgSystemReport {
             case ReasonNotReady::FaultBrake:             return "FaultBrake";
             case ReasonNotReady::FaultThrtl:             return "FaultThrtl";
             case ReasonNotReady::FaultGear:              return "FaultGear";
+            case ReasonNotReady::BadCrcRcCmdSteer:       return "BadCrcRcCmdSteer";
+            case ReasonNotReady::BadCrcRcCmdBrake:       return "BadCrcRcCmdBrake";
+            case ReasonNotReady::BadCrcRcCmdThrtl:       return "BadCrcRcCmdThrtl";
+            case ReasonNotReady::BadCrcCmdGear:          return "BadCrcCmdGear";
             case ReasonNotReady::OverrideActiveSteer:    return "OverrideActiveSteer";
             case ReasonNotReady::OverrideActiveBrake:    return "OverrideActiveBrake";
             case ReasonNotReady::OverrideActiveThrtl:    return "OverrideActiveThrtl";
@@ -2577,6 +2601,9 @@ struct MsgThrtlInfo {
             return UINT16_MAX;
         }
         return 0;
+    }
+    void setEngineRpmx4(uint16_t rpm_x4) {
+        engine_rpm = rpm_x4;
     }
     void setEngineRpm(float rpm) {
         if (std::isfinite(rpm)) {
@@ -3378,7 +3405,7 @@ struct MsgMiscCmd {
         Open = 1,
         Close = 2,
     };
-    TurnSignal turn_signal_cmd :2; // Deprecated
+    uint8_t :2; // Previously turn_signal_cmd
     PrkBrkCmd parking_brake_cmd :2;
     DoorSelect door_select :2;
     DoorCmd door_cmd :2;
@@ -3409,7 +3436,7 @@ struct MsgMiscReport1 {
         Off = 2,
         Transition = 3,
     };
-    TurnSignal turn_signal :2; // Deprecated
+    uint8_t :2; // Previously turn_signal
     PrkBrkStat parking_brake :2;
     uint8_t pasngr_detect :1;
     uint8_t pasngr_airbag :1;
@@ -4088,6 +4115,60 @@ struct MsgFuelLevel {
 };
 static_assert(8 == sizeof(MsgFuelLevel));
 
+struct MsgTrafficSignInfo {
+    static constexpr uint32_t ID = 0x382;
+    static constexpr size_t PERIOD_MS = 1000;
+    static constexpr size_t TIMEOUT_MS = 2500;
+    enum class Status : uint8_t {
+        Unknown = 0,
+        Off = 1,
+        Active = 2,
+        Error = 3,
+    };
+    enum class Unit : uint8_t {
+        Unknown = 0,
+        Kph = 1,
+        Mph = 2,
+    };
+    enum class Limit : uint8_t {
+        Unknown = 0x00,
+        NoLimit = 0xFF,
+    };
+    Status status :2;
+    uint8_t camera_used :1;
+    uint8_t navigation_used :1;
+    uint8_t :2;
+    Unit speed_units :2;
+    Limit speed_limit;
+    uint8_t :6;
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        rc = save;
+    }
+    float speedLimit() const {
+        switch (speed_limit) {
+            case Limit::Unknown: return NAN;
+            case Limit::NoLimit: return INFINITY;
+            default: return (float)speed_limit;
+        }
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(4 == sizeof(MsgTrafficSignInfo));
+
 struct MsgGpsLatLong {
     static constexpr uint32_t ID = 0x390;
     static constexpr size_t PERIOD_MS = 1000;
@@ -4393,7 +4474,7 @@ struct MsgEcuInfoMonitor  : public MsgEcuInfo { static constexpr uint32_t ID = 0
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 68> IDS {
+static constexpr std::array<uint32_t, 69> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -4463,6 +4544,7 @@ static constexpr std::array<uint32_t, 68> IDS {
     // Other sensors
     MsgTirePressure::ID,
     MsgFuelLevel::ID,
+    MsgTrafficSignInfo::ID,
     MsgGpsLatLong::ID,
     MsgGpsAltitude::ID,
     MsgGpsTime::ID,
