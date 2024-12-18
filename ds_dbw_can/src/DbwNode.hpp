@@ -72,6 +72,7 @@
 #include <ds_dbw_msgs/msg/eye_tracker.hpp>
 #include <ds_dbw_msgs/msg/tire_pressures.hpp>
 #include <ds_dbw_msgs/msg/fuel_level.hpp>
+#include <ds_dbw_msgs/msg/traffic_sign_info.hpp>
 #include <ds_dbw_msgs/msg/ecu_info.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
@@ -126,7 +127,7 @@ private:
   MsgUlcCmd          msg_ulc_cmd_ = {0};
   MsgUlcCfg          msg_ulc_cfg_ = {0};
   MsgTurnSignalCmd   msg_turn_signal_cmd_ = {TurnSignal::None};
-  MsgMiscCmd         msg_misc_cmd_ = {TurnSignal::None};
+  MsgMiscCmd         msg_misc_cmd_ = {MsgMiscCmd::PrkBrkCmd::None};
   #pragma GCC diagnostic pop
 
   // Received CAN messages (with validation)
@@ -165,6 +166,7 @@ private:
   CanMsgRecvCrcRc<MsgEyeTracker>       msg_eye_tracker_;
   CanMsgRecv     <MsgTirePressure>     msg_tire_pressure_;
   CanMsgRecvCrcRc<MsgFuelLevel>        msg_fuel_level_;
+  CanMsgRecvCrcRc<MsgTrafficSignInfo>  msg_traffic_sign_info_;
   CanMsgRecvCrc  <MsgGpsLatLong>       msg_gps_lat_long_;
   CanMsgRecvCrc  <MsgGpsAltitude>      msg_gps_altitude_;
   CanMsgRecvCrc  <MsgGpsTime>          msg_gps_time_;
@@ -353,6 +355,7 @@ private:
   rclcpp::Publisher<ds_dbw_msgs::msg::EyeTracker>::SharedPtr pub_eye_tracker_;
   rclcpp::Publisher<ds_dbw_msgs::msg::TirePressures>::SharedPtr pub_tire_pressures_;
   rclcpp::Publisher<ds_dbw_msgs::msg::FuelLevel>::SharedPtr pub_fuel_level_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::TrafficSignInfo>::SharedPtr pub_traffic_sign_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::EcuInfo>::SharedPtr pub_ecu_info_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr pub_gps_;
