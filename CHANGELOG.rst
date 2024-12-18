@@ -2,6 +2,25 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2024-12-18)
+------------------
+* Bump firmware versions to match 2024/12/18 release package
+* Add support for Pacifica (RU) platform
+* Contributors: Kevin Hallenbeck
+
+2.3.0 (2024-11-12)
+------------------
+* Bump firmware versions to match 2024/11/12 release package
+* Add traffic sign info message
+* Remove deprecated turn signal from MiscReport and MiscCmd
+* Add support for 2024 Ford F-150 Raptor (P702R)
+* Remove old Ford P5/T6 platforms
+* Only publish dbw_enabled topic when any of the primary report CAN messages are present
+* Add warning for missing brake pedal feedback
+* Add brake/throttle yield request flags
+* Add reason-not-ready bad command CRC/RC
+* Contributors: Kevin Hallenbeck
+
 2.2.3 (2024-09-30)
 ------------------
 * Bump firmware versions to match 2024/10/01 release package
