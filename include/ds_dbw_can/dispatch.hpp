@@ -446,9 +446,9 @@ struct MsgSteerReport2 {
     uint8_t :1;
     uint8_t :1;
     uint8_t :1;
+    uint8_t actuator_temp; // 1 degC, -40 to 214 degC
     uint8_t :8;
-    uint8_t :8;
-    uint8_t limit_rate :8; // 4 deg/s, 255=unlimited
+    uint8_t limit_rate; // 4 deg/s, 255=unlimited
     uint16_t limit_value :10; // 1 deg, 1023=unlimited
     uint8_t :1;
     CmdSrc cmd_src :3;
@@ -457,7 +457,27 @@ struct MsgSteerReport2 {
     void reset() {
         uint8_t save = rc;
         memset(this, 0x00, sizeof(*this));
+        actuator_temp = UINT8_MAX;
         rc = save;
+    }
+    void setActuatorTempeDegC(float deg_c) {
+        if (std::isfinite(deg_c)) {
+            actuator_temp = std::clamp<float>(deg_c + 40, 0, UINT8_MAX - 1);
+        } else {
+            actuator_temp = UINT8_MAX;
+        }
+    }
+    void setActuatorTempeDegC(int deg_c) {
+        actuator_temp = std::clamp<int>(deg_c + 40, 0, UINT8_MAX - 1);
+    }
+    bool actuatorTempValid() const {
+        return actuator_temp != UINT8_MAX;
+    }
+    float actuatorTempDegC() const {
+        if (actuatorTempValid()) {
+            return actuator_temp - 40;
+        }
+        return NAN;
     }
     void setLimitRateDegS(float deg_s) {
         if (std::isfinite(deg_s)) {
@@ -515,7 +535,9 @@ struct MsgSteerReport3 {
     uint8_t degraded_comms_actuator :1;
     uint8_t :3;
     uint8_t degraded_vehicle_speed :1;
-    uint8_t :6;
+    uint8_t :4;
+    uint8_t degraded_stall :1;
+    uint8_t degraded_actuator_warm :1;
     uint8_t degraded_calibration :1;
     uint8_t fault_comms_dbw :1;
     uint8_t fault_comms_dbw_gateway :1;
@@ -536,7 +558,7 @@ struct MsgSteerReport3 {
     uint8_t fault_actuator_torque_sensor :1;
     uint8_t fault_actuator_config :1;
     uint8_t fault_actuator_assist :1;
-    uint8_t :1;
+    uint8_t fault_actuator_hot :1;
     uint8_t fault_control_performance :1;
     uint8_t fault_param_mismatch :1;
     uint8_t fault_param_limits :1;
@@ -1152,7 +1174,7 @@ struct MsgBrakeReport2 {
     uint8_t req_park_brake :1;
     uint8_t req_shift_park :1;
     uint8_t brake_available_full :1;
-    uint8_t brake_available_duration :8; // 2 sec or 100ms
+    uint8_t brake_available_duration; // 2 sec or 100ms
     BrkAvlMode brake_available_mux :2;
     uint8_t external_button :1;
     CmdSrc cmd_src :3;
@@ -1312,7 +1334,8 @@ struct MsgBrakeReport3 {
     uint8_t fault_bped_sensor_mismatch :1;
     uint8_t fault_actuator_1 :1;
     uint8_t fault_actuator_2 :1;
-    uint8_t :4;
+    uint8_t :3;
+    uint8_t fault_actuator_hot :1;
     uint8_t fault_control_performance :1;
     uint8_t fault_param_mismatch :1;
     uint8_t fault_param_limits :1;
@@ -1818,7 +1841,7 @@ struct MsgGearReport2 {
     uint8_t :1;
     uint8_t :1;
     uint8_t :1;
-    uint8_t :8;
+    uint8_t actuator_temp; // 1 degC, -40 to 214 degC
     uint8_t :8;
     uint8_t :8;
     uint8_t :8;
@@ -1830,7 +1853,27 @@ struct MsgGearReport2 {
     void reset() {
         uint8_t save = rc;
         memset(this, 0x00, sizeof(*this));
+        actuator_temp = UINT8_MAX;
         rc = save;
+    }
+    void setActuatorTempeDegC(float deg_c) {
+        if (std::isfinite(deg_c)) {
+            actuator_temp = std::clamp<float>(deg_c + 40, 0, UINT8_MAX - 1);
+        } else {
+            actuator_temp = UINT8_MAX;
+        }
+    }
+    void setActuatorTempeDegC(int deg_c) {
+        actuator_temp = std::clamp<int>(deg_c + 40, 0, UINT8_MAX - 1);
+    }
+    bool actuatorTempValid() const {
+        return actuator_temp != UINT8_MAX;
+    }
+    float actuatorTempDegC() const {
+        if (actuatorTempValid()) {
+            return actuator_temp - 40;
+        }
+        return NAN;
     }
     void setCrc() {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
@@ -1868,7 +1911,8 @@ struct MsgGearReport3 {
     uint8_t degraded_vehicle_speed :1;
     uint8_t degraded_gear_mismatch :1;
     uint8_t degraded_stuck_in_neutral :1;
-    uint8_t :3;
+    uint8_t :2;
+    uint8_t degraded_actuator_warm :1;
     uint8_t degraded_power :1;
     uint8_t degraded_calibration :1;
     uint8_t fault_comms_dbw :1;
@@ -1889,7 +1933,9 @@ struct MsgGearReport3 {
     uint8_t :7;
     uint8_t :1;
     uint8_t fault_actuator_config :1;
-    uint8_t :3;
+    uint8_t :1;
+    uint8_t fault_actuator_hot :1;
+    uint8_t :1;
     uint8_t fault_param_mismatch :1;
     uint8_t :1;
     uint8_t fault_calibration :1;
@@ -2358,6 +2404,11 @@ struct MsgSystemReport {
         time_phase = UINT16_MAX >> 6;
         rc = save;
     }
+    void reset(const MsgSystemReport& previous) {
+        memset(this, 0x00, sizeof(*this));
+        time_phase = previous.time_phase;
+        rc = previous.rc;
+    }
     void setTimePhaseMs(size_t ms) {
         time_phase = ms % 1000;
     }
@@ -2370,19 +2421,9 @@ struct MsgSystemReport {
         }
         return SIZE_MAX;
     }
-    bool operator==(const MsgSystemReport& _other) const {
-        return memcmp(this, &_other, sizeof(*this)) == 0;
-    }
-    bool operator!=(const MsgSystemReport& _other) const {
-        return !(*this == _other);
-    }
     bool needsUpdate(const MsgSystemReport& previous) const {
-        // Check for changes and ignore signals that always change
-        MsgSystemReport self = *this;
-        self.time_phase = previous.time_phase;
-        self.rc = previous.rc;
-        self.crc = previous.crc;
-        return self != previous;
+        // Check for changes and ignore CRC
+        return memcmp(this, &previous, offsetof(typeof(*this), crc)) != 0;
     }
     void setCrc() {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
@@ -2397,6 +2438,13 @@ struct MsgSystemReport {
     }
 };
 static_assert(8 == sizeof(MsgSystemReport));
+struct MsgSystemParamHash {
+    static constexpr uint32_t ID = 0x336;
+    static constexpr size_t PERIOD_MS = 5000;
+    static constexpr size_t TIMEOUT_MS = 17500;
+    uint32_t hash;
+};
+static_assert(4 == sizeof(MsgSystemParamHash));
 
 struct MsgVehicleVelocity {
     static constexpr uint32_t ID = 0x107;
@@ -3484,7 +3532,6 @@ struct MsgTurnSignalCmd {
     }
 };
 static_assert(2 == sizeof(MsgTurnSignalCmd));
-
 struct MsgTurnSignalReport {
     static constexpr uint32_t ID = 0x2C2;
     static constexpr size_t PERIOD_MIN =  20;
@@ -3575,7 +3622,6 @@ struct MsgMiscCmd {
     }
 };
 static_assert(4 == sizeof(MsgMiscCmd));
-
 struct MsgMiscReport1 {
     static constexpr uint32_t ID = 0x2C4;
     static constexpr size_t PERIOD_MS = 50;
@@ -3657,7 +3703,6 @@ struct MsgMiscReport1 {
     }
 };
 static_assert(8 == sizeof(MsgMiscReport1));
-
 struct MsgMiscReport2 {
     static constexpr uint32_t ID = 0x2C5;
     static constexpr size_t PERIOD_MS = 50;
@@ -3774,7 +3819,6 @@ struct MsgDriveModeCmd {
     }
 };
 static_assert(4 == sizeof(MsgDriveModeCmd));
-
 struct MsgDriveModeReport1 {
     static constexpr uint32_t ID = 0x2C7;
     static constexpr size_t PERIOD_MIN =  20;
@@ -3826,7 +3870,6 @@ struct MsgDriveModeReport1 {
     }
 };
 static_assert(8 == sizeof(MsgDriveModeReport1));
-
 struct MsgDriveModeReport2 {
     static constexpr uint32_t ID = 0x30C;
     static constexpr size_t PERIOD_MS  = 200;
@@ -3873,6 +3916,172 @@ struct MsgDriveModeReport2 {
 };
 static_assert(8 == sizeof(MsgDriveModeReport2));
 
+struct MsgGpioCmd {
+    static constexpr uint32_t ID = 0x2D0;
+    static constexpr size_t TIMEOUT_MS = 200;
+    enum class GpioCmd : uint8_t {
+        Passive = 0,
+        Low = 1,
+    };
+    enum class SsrCmd : uint8_t {
+        Passive = 0,
+        Active = 1,
+    };
+    GpioCmd gpio1_cmd :1;
+    GpioCmd gpio2_cmd :1;
+    GpioCmd gpio3_cmd :1;
+    GpioCmd gpio4_cmd :1;
+    GpioCmd gpio5_cmd :1;
+    GpioCmd gpio6_cmd :1;
+    SsrCmd ssr1_cmd :1;
+    SsrCmd ssr2_cmd :1;
+    uint8_t :4;
+    uint8_t rc :4;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        rc = save;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(3 == sizeof(MsgGpioCmd));
+struct MsgGpioReport {
+    static constexpr uint32_t ID = 0x2D1;
+    static constexpr size_t PERIOD_MIN = 10;
+    static constexpr size_t PERIOD_MAX = 100;
+    static constexpr size_t TIMEOUT_MS = 250;
+    using GpioCmd = MsgGpioCmd::GpioCmd;
+    using SsrCmd = MsgGpioCmd::SsrCmd;
+    enum class GpioStatus : uint8_t {
+        Low = 0,
+        High = 1,
+    };
+    GpioCmd gpio1_cmd :1;
+    GpioCmd gpio2_cmd :1;
+    GpioCmd gpio3_cmd :1;
+    GpioCmd gpio4_cmd :1;
+    GpioCmd gpio5_cmd :1;
+    GpioCmd gpio6_cmd :1;
+    SsrCmd ssr1_cmd :1;
+    SsrCmd ssr2_cmd :1;
+    GpioStatus gpio1_status :1;
+    GpioStatus gpio2_status :1;
+    GpioStatus gpio3_status :1;
+    GpioStatus gpio4_status :1;
+    GpioStatus gpio5_status :1;
+    GpioStatus gpio6_status :1;
+    uint8_t :2;
+    uint8_t :8;
+    uint8_t gpio1_cmd_supported :1;
+    uint8_t gpio2_cmd_supported :1;
+    uint8_t gpio3_cmd_supported :1;
+    uint8_t gpio4_cmd_supported :1;
+    uint8_t gpio5_cmd_supported :1;
+    uint8_t gpio6_cmd_supported :1;
+    uint8_t ssr1_cmd_supported :1;
+    uint8_t ssr2_cmd_supported :1;
+    uint8_t :3;
+    uint8_t timeout :1;
+    uint8_t bad_crc :1; // Invalid CRC in MsgGpioCmd
+    uint8_t bad_rc :1; // Invalid rolling counter in MsgGpioCmd
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        rc = save;
+    }
+    void reset(const MsgGpioReport& previous) {
+        memset(this, 0x00, sizeof(*this));
+        rc = previous.rc;
+    }
+    bool needsUpdate(const MsgGpioReport& previous) const {
+        // Check for changes and ignore CRC
+        return memcmp(this, &previous, offsetof(typeof(*this), crc)) != 0;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(6 == sizeof(MsgGpioReport));
+
+struct MsgRemoteReport {
+    static constexpr uint32_t ID = 0x2D8;
+    static constexpr size_t PERIOD_MIN = 10;
+    static constexpr size_t PERIOD_MS  = 100;
+    static constexpr size_t PERIOD_MAX = 100;
+    static constexpr size_t TIMEOUT_MS = 250;
+    enum class Mode : uint8_t {
+        Interject = 0,
+        Arbitrate = 1,
+    };
+    enum class State : uint8_t {
+        EStop   = 0,
+        Pause   = 1,
+        Remote  = 2,
+        Control = 3,
+    };
+    static constexpr const char * modeToString(Mode x) {
+        switch (x) {
+            case Mode::Interject: return "Interject";
+            case Mode::Arbitrate: return "Arbitrate";
+        }
+        return "Unknown";
+    }
+    Mode remote_control_mode :4; // Parameter RemoteControlMode value
+    State remote_control_state :4;
+    uint8_t :8;
+    uint8_t :3;
+    uint8_t timeout :1;
+    uint8_t :2;
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        rc = save;
+    }
+    void reset(const MsgRemoteReport& previous) {
+        memset(this, 0x00, sizeof(*this));
+        rc = previous.rc;
+    }
+    bool needsUpdate(const MsgRemoteReport& previous) const {
+        // Check for changes and ignore CRC
+        return memcmp(this, &previous, offsetof(typeof(*this), crc)) != 0;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(4 == sizeof(MsgRemoteReport));
+
 struct MsgDriverAssist {
     static constexpr uint32_t ID = 0x2C8;
     static constexpr size_t PERIOD_MIN =  10;
@@ -3917,6 +4126,10 @@ struct MsgDriverAssist {
         memset(this, 0x00, sizeof(*this));
         rc = save;
     }
+    void reset(const MsgDriverAssist& previous) {
+        memset(this, 0x00, sizeof(*this));
+        rc = previous.rc;
+    }
     void setDecelMps2(float m_s2, DecelSrc src) {
         if (src != DecelSrc::None && std::isfinite(m_s2)) {
             decel = std::clamp<float>(std::round(m_s2 / 0.05f), 0u, UINT8_MAX);
@@ -3932,6 +4145,10 @@ struct MsgDriverAssist {
         }
         return NAN;
     }
+    bool needsUpdate(const MsgDriverAssist& previous) const {
+        // Check for changes and ignore CRC
+        return memcmp(this, &previous, offsetof(typeof(*this), crc)) != 0;
+    }
     void setCrc() {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
         crc = crc8(ID, this, offsetof(typeof(*this), crc));
@@ -3942,12 +4159,6 @@ struct MsgDriverAssist {
     }
     bool validRc(uint8_t rc) const {
         return rc != this->rc;
-    }
-    bool operator==(const MsgDriverAssist& _other) const {
-        return memcmp(this, &_other, sizeof(*this)) == 0;
-    }
-    bool operator!=(const MsgDriverAssist& _other) const {
-        return !(*this == _other);
     }
 };
 static_assert(6 == sizeof(MsgDriverAssist));
@@ -4797,7 +5008,7 @@ struct MsgEcuInfoMonitor  : public MsgEcuInfo { static constexpr uint32_t ID = 0
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 73> IDS {
+static constexpr std::array<uint32_t, 77> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -4849,6 +5060,9 @@ static constexpr std::array<uint32_t, 73> IDS {
     MsgBattery::ID,
     MsgBatteryTraction::ID,
     MsgEyeTracker::ID,
+    MsgGpioCmd::ID,
+    MsgGpioReport::ID,
+    MsgRemoteReport::ID,
     // Secondary reports
     MsgSteerReport2::ID,
     MsgBrakeReport2::ID,
@@ -4864,6 +5078,7 @@ static constexpr std::array<uint32_t, 73> IDS {
     MsgSteerParamHash::ID,
     MsgBrakeParamHash::ID,
     MsgThrtlParamHash::ID,
+    MsgSystemParamHash::ID,
     // Reserved
     MsgReserved1::ID,
     MsgReserved2::ID,
