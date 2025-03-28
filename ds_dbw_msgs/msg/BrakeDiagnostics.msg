@@ -52,6 +52,7 @@ bool fault_bped_sensor_2
 bool fault_bped_sensor_mismatch
 bool fault_actuator_1
 bool fault_actuator_2
+bool fault_actuator_hot
 bool fault_control_performance
 bool fault_param_mismatch
 bool fault_param_limits

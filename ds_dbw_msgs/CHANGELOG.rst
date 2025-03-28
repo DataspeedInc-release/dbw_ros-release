@@ -2,6 +2,14 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.3 (2025-03-28)
+------------------
+* Add remote control report (mode/state/timeout)
+* Add steering stall limit diagnostic
+* Add actuator temperature and warm/hot diagnostics
+* Add GPIO/SSR status and control
+* Contributors: Kevin Hallenbeck
+
 2.3.2 (2025-02-18)
 ------------------
 * Add drive mode command and report messages
