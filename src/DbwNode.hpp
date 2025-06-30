@@ -53,11 +53,13 @@
 #include <ds_dbw_msgs/msg/monitor_cmd.hpp>
 #include <ds_dbw_msgs/msg/monitor_report.hpp>
 #include <ds_dbw_msgs/msg/monitor_throttle.hpp>
+#include <ds_dbw_msgs/msg/monitor_steer_rate_debug.hpp>
 #include <ds_dbw_msgs/msg/system_report.hpp>
 #include <ds_dbw_msgs/msg/vehicle_velocity.hpp>
 #include <ds_dbw_msgs/msg/throttle_info.hpp>
 #include <ds_dbw_msgs/msg/brake_info.hpp>
 #include <ds_dbw_msgs/msg/propulsion_info.hpp>
+#include <ds_dbw_msgs/msg/steering_info.hpp>
 #include <ds_dbw_msgs/msg/steering_offset.hpp>
 #include <ds_dbw_msgs/msg/ulc_cmd.hpp>
 #include <ds_dbw_msgs/msg/ulc_report.hpp>
@@ -157,11 +159,13 @@ private:
   CanMsgRecvCrcRc<MsgMonitorReport2>   msg_monitor_rpt_2_;
   CanMsgRecvCrcRc<MsgMonitorReport3>   msg_monitor_rpt_3_;
   CanMsgRecvCrcRc<MsgMonitorThrtl>     msg_monitor_thrtl_;
+  CanMsgRecvCrcRc<MsgMonitorSteerRateDebug> msg_monitor_steer_rate_debug_;
   CanMsgRecvCrcRc<MsgSystemReport>     msg_system_rpt_;
   CanMsgRecvCrcRc<MsgVehicleVelocity>  msg_veh_vel_;
   CanMsgRecvCrcRc<MsgThrtlInfo>        msg_thrtl_info_;
   CanMsgRecvCrcRc<MsgBrakeInfo>        msg_brake_info_;
   CanMsgRecvCrcRc<MsgPropulsionInfo>   msg_propulsion_info_;
+  CanMsgRecvCrcRc<MsgSteerInfo>        msg_steer_info_;
   CanMsgRecvCrcRc<MsgSteerOffset>      msg_steer_offset_;
   CanMsgRecvCrcRc<MsgRemoteReport>     msg_remote_rpt_;
   CanMsgRecvCrcRc<MsgUlcReport>        msg_ulc_rpt_;
@@ -174,6 +178,7 @@ private:
   CanMsgRecvCrcRc<MsgDriveModeReport2> msg_drive_mode_rpt_2_;
   CanMsgRecvCrcRc<MsgMiscReport1>      msg_misc_rpt_1_;
   CanMsgRecvCrcRc<MsgMiscReport2>      msg_misc_rpt_2_;
+  CanMsgRecvCrcRc<MsgMiscReport3>      msg_misc_rpt_3_;
   CanMsgRecvCrcRc<MsgGpioReport>       msg_gpio_rpt_;
   CanMsgRecvCrcRc<MsgDriverAssist>     msg_driver_assist_;
   CanMsgRecvCrcRc<MsgBattery>          msg_battery_;
@@ -358,11 +363,13 @@ private:
   rclcpp::Publisher<ds_dbw_msgs::msg::GearDiagnostics>::SharedPtr pub_gear_diag_;
   rclcpp::Publisher<ds_dbw_msgs::msg::MonitorReport>::SharedPtr pub_monitor_rpt_;
   rclcpp::Publisher<ds_dbw_msgs::msg::MonitorThrottle>::SharedPtr pub_monitor_thrtl_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::MonitorSteerRateDebug>::SharedPtr pub_monitor_steer_rate_debug_;
   rclcpp::Publisher<ds_dbw_msgs::msg::SystemReport>::SharedPtr pub_system_rpt_;
   rclcpp::Publisher<ds_dbw_msgs::msg::VehicleVelocity>::SharedPtr pub_veh_vel_;
   rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleInfo>::SharedPtr pub_thrtl_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::BrakeInfo>::SharedPtr pub_brake_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::PropulsionInfo>::SharedPtr pub_propulsion_info_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::SteeringInfo>::SharedPtr pub_steer_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::SteeringOffset>::SharedPtr pub_steer_offset_;
   rclcpp::Publisher<ds_dbw_msgs::msg::RemoteReport>::SharedPtr pub_remote_rpt_;
   rclcpp::Publisher<ds_dbw_msgs::msg::UlcReport>::SharedPtr pub_ulc_;

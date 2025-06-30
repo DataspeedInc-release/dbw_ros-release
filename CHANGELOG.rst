@@ -2,6 +2,26 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.5 (2025-06-27)
+------------------
+* Bump firmware versions to match 2025/06/27 release package
+* Add monitor steer rate debug message
+* Add SteerInfo message
+* Contributors: Kevin Hallenbeck
+
+2.3.4 (2025-05-06)
+------------------
+* Bump firmware versions to match 2025/05/06 release package
+* Add engine/transmission/motor temperatures and over-temperature warnings to MiscReport
+* Move GearNum signal from ThrtlInfo to PropulsionInfo and split into GearNumTarget and GearNumActual
+* Add steering command type SetOffset to set steering wheel angle offset directly
+* Add propulsion torque limiting and limp home statuses (Polaris Ranger XD only)
+* Add engine throttle valve position (Polaris Ranger XD only)
+* Add Ford NGDV platform
+* Export ds_dbw_can dependencies
+* Add brake hold diagnostics
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck
+
 2.3.3 (2025-03-28)
 ------------------
 * Bump firmware versions to match 2025/03/28 release package
