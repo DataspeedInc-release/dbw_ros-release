@@ -148,6 +148,7 @@ struct MsgSteerCmd {
         Angle = 2,      // 0.1 deg
         Curvature = 3,  // 0.0000061 1/m
         YawRate = 4,    // 0.015 deg/s
+        SetOffset = 13, // 0.1 deg
         Percent = 14,   // 0.01 %
         Calibrate = 15, // 0.1 deg
     };
@@ -1301,7 +1302,8 @@ struct MsgBrakeReport3 {
     uint8_t degraded_control_performance :1;
     uint8_t degraded_param_mismatch :1;
     uint8_t degraded_comms_vehicle :1;
-    uint8_t :3;
+    uint8_t :2;
+    uint8_t degraded_hold_duration :1;
     uint8_t degraded_comms_actuator :1;
     uint8_t degraded_comms_actuator_1 :1;
     uint8_t degraded_comms_actuator_2 :1;
@@ -1334,7 +1336,8 @@ struct MsgBrakeReport3 {
     uint8_t fault_bped_sensor_mismatch :1;
     uint8_t fault_actuator_1 :1;
     uint8_t fault_actuator_2 :1;
-    uint8_t :3;
+    uint8_t :2;
+    uint8_t fault_actuator_hold_duration :1;
     uint8_t fault_actuator_hot :1;
     uint8_t fault_control_performance :1;
     uint8_t fault_param_mismatch :1;
@@ -2175,6 +2178,89 @@ struct MsgMonitorThrtl {
     }
 };
 static_assert(4 == sizeof(MsgMonitorThrtl));
+struct MsgMonitorSteerRateDebug {
+    static constexpr uint32_t ID = 0x3F0;
+    static constexpr size_t PERIOD_MIN =   8;
+    static constexpr size_t PERIOD_MS  =  20;
+    static constexpr size_t PERIOD_MAX =  50;
+    static constexpr size_t TIMEOUT_MS = 250;
+    int16_t angle_cmd; // 0.1 deg
+    int16_t angle_cmd_rate_calc :13; // 0.5 deg/s
+    uint16_t angle_cmd_rate_limit :11; // 0.5 deg/s
+    uint8_t stamp_ms;
+    uint8_t rate_limit_exceeded :1;
+    uint8_t :5;
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        angle_cmd = INT16_MIN;
+        angle_cmd_rate_calc = INT16_MIN >> 3;
+        angle_cmd_rate_limit = UINT16_MAX >> 5;
+        rc = save;
+    }
+    void setAngleCmdDeg(float deg) {
+        if (std::isfinite(deg)) {
+            angle_cmd = std::clamp<float>(std::round(deg * 10), -INT16_MAX, INT16_MAX);
+        } else {
+            angle_cmd = INT16_MIN;
+        }
+    }
+    bool angleCmdValid() const {
+        return angle_cmd != INT16_MIN;
+    }
+    float angleCmdDeg() const {
+        if (angleCmdValid()) {
+            return angle_cmd * 0.1f;
+        }
+        return NAN;
+    }
+    void setAngleCmdRateCalcDegS(float deg_s) {
+        if (std::isfinite(deg_s)) {
+            angle_cmd_rate_calc = std::clamp<float>(std::round(deg_s * 2), -(INT16_MAX >> 3), INT16_MAX >> 3);
+        } else {
+            angle_cmd_rate_calc = INT16_MIN >> 3;
+        }
+    }
+    bool angleCmdRateCalcValid() const {
+        return angle_cmd_rate_calc != INT16_MIN >> 3;
+    }
+    float angleCmdRateCalcDegS() const {
+        if (angleCmdRateCalcValid()) {
+            return angle_cmd_rate_calc * 0.5f;
+        }
+        return NAN;
+    }
+    void setAngleCmdRateLimitDegS(float deg_s) {
+        if (std::isfinite(deg_s)) {
+            angle_cmd_rate_limit = std::clamp<float>(std::round(deg_s * 2), 0, (UINT16_MAX >> 5) - 1);
+        } else {
+            angle_cmd_rate_limit = UINT16_MAX >> 5;
+        }
+    }
+    bool angleCmdRateLimitValid() const {
+        return angle_cmd_rate_limit != UINT16_MAX >> 5;
+    }
+    float angleCmdRateLimitDegS() const {
+        if (angleCmdRateLimitValid()) {
+            return angle_cmd_rate_limit * 0.5f;
+        }
+        return INFINITY;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(8 == sizeof(MsgMonitorSteerRateDebug));
 
 struct MsgSystemCmd {
     static constexpr uint32_t ID = 0x216;
@@ -2602,32 +2688,14 @@ struct MsgThrtlInfo {
         Fault = 3,
     };
     using DriveMode = ds_dbw_can::DriveMode;
-    enum class GearNumber : uint8_t {
-        Unknown =   0, // Unknown
-        Drive01 =   1, //  1st (Drive)
-        Drive02 =   2, //  2nd (Drive)
-        Drive03 =   3, //  3rd (Drive)
-        Drive04 =   4, //  4th (Drive)
-        Drive05 =   5, //  5th (Drive)
-        Drive06 =   6, //  6th (Drive)
-        Drive07 =   7, //  7th (Drive)
-        Drive08 =   8, //  8th (Drive)
-        Drive09 =   9, //  9th (Drive)
-        Drive10 =  10, // 10th (Drive)
-        Neutral =  16, // Neutral (N)
-        Reverse1 = 17, // 1st (Reverse)
-        Reverse2 = 18, // 2nd (Reverse)
-        Park     = 31, // Park (P)
-    };
     uint16_t accel_pedal_pc :12; // 0.025 %, 0x3FF=unknown
     Quality accel_pedal_qf :2;
     OnePedalMode one_pedal_drive :2;
     uint16_t engine_rpm; // 0.25 RPM, 0xFFFF=unknown
-    uint8_t :8;
+    uint8_t engine_throttle_valve_pc; // 0.4 %, 0xFF=unknown
     uint8_t :4;
     DriveMode drive_mode :4;
-    GearNumber gear_num :5;
-    uint8_t :1;
+    uint8_t :6;
     uint8_t rc :2;
     uint8_t crc;
     void reset() {
@@ -2637,7 +2705,7 @@ struct MsgThrtlInfo {
         accel_pedal_pc = UINT16_MAX >> 4;
         one_pedal_drive = OnePedalMode::Unknown;
         engine_rpm = UINT16_MAX;
-        gear_num = GearNumber::Unknown;
+        engine_throttle_valve_pc = UINT8_MAX;
         rc = save;
     }
     void setAccelPedalPercent(float pc) {
@@ -2696,6 +2764,22 @@ struct MsgThrtlInfo {
     float engineRpm() const {
         if (engineRpmValid()) {
             return engine_rpm * 0.25f;
+        }
+        return NAN;
+    }
+    void setEngineThrottleValvePercent(float pc) {
+        if (std::isfinite(pc)) {
+            engine_throttle_valve_pc = std::clamp<float>(pc / 0.4f, 0, UINT8_MAX - 1);
+        } else {
+            engine_throttle_valve_pc = UINT8_MAX;
+        }
+    }
+    bool engineThrottleValvePercentValid() const {
+        return engine_throttle_valve_pc != UINT8_MAX;
+    }
+    float engineThrottleValvePercent() const {
+        if (engineThrottleValvePercentValid()) {
+            return engine_throttle_valve_pc * 0.4f;
         }
         return NAN;
     }
@@ -2829,17 +2913,43 @@ struct MsgPropulsionInfo {
         Ford = 1,
         Polaris = 2,
     };
+    enum class GearNumber : uint8_t {
+        Unknown =   0, // Unknown
+        Drive01 =   1, //  1st (Drive)
+        Drive02 =   2, //  2nd (Drive)
+        Drive03 =   3, //  3rd (Drive)
+        Drive04 =   4, //  4th (Drive)
+        Drive05 =   5, //  5th (Drive)
+        Drive06 =   6, //  6th (Drive)
+        Drive07 =   7, //  7th (Drive)
+        Drive08 =   8, //  8th (Drive)
+        Drive09 =   9, //  9th (Drive)
+        Drive10 =  10, // 10th (Drive)
+        Reverse1 = 11, // 1st (Reverse)
+        Reverse2 = 12, // 2nd (Reverse)
+        Neutral =  14, // Neutral (N)
+        Park     = 15, // Park (P)
+    };
+    enum class Bool : uint8_t {
+        Unknown = 0,
+        False = 1,
+        True = 2,
+        Error = 3,
+    };
     union {
         struct {
             int16_t propulsion_torque_request; // 4 Nm
             int16_t propulsion_torque_actual;  // 4 Nm
-            uint16_t :16;
+            uint8_t :8;
+            GearNumber gear_num_target :4;
+            GearNumber gear_num_actual :4;
         } ford;
         struct {
             int16_t engine_torque_request; // 0.25 Nm
             int16_t engine_torque_actual;  // 0.25 Nm
             uint16_t trans_ratio :12; // 0.01
-            uint16_t :4;
+            Bool torque_limiting :2;
+            Bool limp_home :2;
         } polaris;
     };
     Oem oem :3;
@@ -2851,7 +2961,7 @@ struct MsgPropulsionInfo {
         memset(this, 0x00, sizeof(*this));
         rc = save;
     }
-    void setFordSignals(int32_t request_nm, int32_t actual_nm) {
+    void setFordSignals(int32_t request_nm, int32_t actual_nm, GearNumber gear_num_target, GearNumber gear_num_actual) {
         oem = Oem::Ford;
         if (request_nm != INT32_MIN) {
             ford.propulsion_torque_request = std::clamp<int32_t>(request_nm / 4, -INT16_MAX, INT16_MAX);
@@ -2863,8 +2973,10 @@ struct MsgPropulsionInfo {
         } else {
             ford.propulsion_torque_actual = INT16_MIN;
         }
+        ford.gear_num_target = gear_num_target;
+        ford.gear_num_actual = gear_num_actual;
     }
-    void setPolarisSignals(float request_nm, float actual_nm, float ratio) {
+    void setPolarisSignals(float request_nm, float actual_nm, float ratio, Bool limiting, Bool limp_home) {
         oem = Oem::Polaris;
         if (std::isfinite(request_nm)) {
             polaris.engine_torque_request = std::clamp<float>(request_nm * 4, -INT16_MAX, INT16_MAX);
@@ -2881,6 +2993,8 @@ struct MsgPropulsionInfo {
         } else {
             polaris.trans_ratio = UINT16_MAX >> 4;
         }
+        polaris.torque_limiting = limiting;
+        polaris.limp_home = limp_home;
     }
     bool propulsionTorqueRequestValid() const {
         return oem == Oem::Ford && ford.propulsion_torque_request != INT16_MIN;
@@ -3045,6 +3159,123 @@ struct MsgSteerOffset {
     }
 };
 static_assert(8 == sizeof(MsgSteerOffset));
+
+struct MsgSteerInfo {
+    static constexpr uint32_t ID = 0x10D;
+    static constexpr size_t PERIOD_MIN =    8;
+    static constexpr size_t PERIOD_MS  =  500;
+    static constexpr size_t PERIOD_MAX =  500;
+    static constexpr size_t TIMEOUT_MS = 1750;
+    int16_t angle_rate :12;     // 1 deg/s, +-2047 deg/s
+    int16_t angle_cmd_rate :12; // 1 deg/s, +-2047 deg/s
+    int16_t actuator_current :12; // 0.1 A, +-204.7 A
+    uint16_t override_torque_filtered :9;  // 0.03125 Nm
+    uint16_t override_torque_threshold :9; // 0.03125 Nm
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        angle_rate = INT16_MIN >> 4;
+        angle_cmd_rate = INT16_MIN >> 4;
+        actuator_current = INT16_MIN >> 4;
+        override_torque_filtered = UINT16_MAX >> 7;
+        override_torque_threshold = UINT16_MAX >> 7;
+        rc = save;
+    }
+    void setAngleRateDegS(float deg_s) {
+        if (std::isfinite(deg_s)) {
+            angle_rate = std::clamp<float>(std::round(deg_s), -(INT16_MAX >> 4), INT16_MAX >> 4);
+        } else {
+            angle_rate = INT16_MIN >> 4;
+        }
+    }
+    bool angleRateValid() const {
+        return angle_rate != INT16_MIN >> 4;
+    }
+    float angleRateDegS() const {
+        if (angleRateValid()) {
+            return angle_rate;
+        }
+        return NAN;
+    }
+    void setAngleCmdRateDegS(float deg_s) {
+        if (std::isfinite(deg_s)) {
+            angle_cmd_rate = std::clamp<float>(std::round(deg_s), -(INT16_MAX >> 4), INT16_MAX >> 4);
+        } else {
+            angle_cmd_rate = INT16_MIN >> 4;
+        }
+    }
+    bool angleCmdRateValid() const {
+        return angle_cmd_rate != INT16_MIN >> 4;
+    }
+    float angleCmdRateDegS() const {
+        if (angleCmdRateValid()) {
+            return angle_cmd_rate;
+        }
+        return NAN;
+    }
+    void setActuatorCurrentAmps(float amps) {
+        if (std::isfinite(amps)) {
+            actuator_current = std::clamp<float>(std::round(amps * 10), -(INT16_MAX >> 4), INT16_MAX >> 4);
+        } else {
+            actuator_current = INT16_MIN >> 4;
+        }
+    }
+    bool actuatorCurrentValid() const {
+        return actuator_current != INT16_MIN >> 4;
+    }
+    float actuatorCurrentAmps() const {
+        if (actuatorCurrentValid()) {
+            return actuator_current * 0.1f;
+        }
+        return NAN;
+    }
+    void setOverrideTorqueFilteredNm(float nm) {
+        if (std::isfinite(nm)) {
+            override_torque_filtered = std::clamp<float>(std::round(nm * 32), 0, (UINT16_MAX >> 7) - 1);
+        } else {
+            override_torque_filtered = UINT16_MAX >> 7;
+        }
+    }
+    bool overrideTorqueFilteredValid() const {
+        return override_torque_filtered != UINT16_MAX >> 7;
+    }
+    float overrideTorqueFilteredNm() const {
+        if (overrideTorqueFilteredValid()) {
+            return override_torque_filtered * 0.03125f;
+        }
+        return NAN;
+    }
+    void setOverrideTorqueThresholdNm(float nm) {
+        if (std::isfinite(nm)) {
+            override_torque_threshold = std::clamp<float>(std::round(nm * 32), 0, (UINT16_MAX >> 7) - 1);
+        } else {
+            override_torque_threshold = UINT16_MAX >> 7;
+        }
+    }
+    bool overrideTorqueThresholdValid() const {
+        return override_torque_threshold != UINT16_MAX >> 7;
+    }
+    float overrideTorqueThresholdNm() const {
+        if (overrideTorqueThresholdValid()) {
+            return override_torque_threshold * 0.03125f;
+        }
+        return NAN;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(8 == sizeof(MsgSteerInfo));
 
 struct MsgUlcCmd {
     static constexpr uint32_t ID = 0x284;
@@ -3754,7 +3985,7 @@ struct MsgMiscReport2 {
     uint8_t :8;
     uint8_t :8;
     uint8_t :8;
-    uint8_t outside_air_temp;
+    uint8_t outside_air_temp; // -40 to 87 deg C
     uint8_t :6;
     uint8_t rc :2;
     uint8_t crc;
@@ -3793,6 +4024,83 @@ struct MsgMiscReport2 {
     }
 };
 static_assert(8 == sizeof(MsgMiscReport2));
+struct MsgMiscReport3 {
+    static constexpr uint32_t ID = 0x2E0;
+    static constexpr size_t PERIOD_MS = 500;
+    static constexpr size_t TIMEOUT_MS = 2500;
+    uint8_t engine_coolant_temp;      // -40 to 214 deg C
+    uint8_t engine_oil_temp;          // -40 to 214 deg C
+    uint8_t trans_oil_temp;           // -40 to 214 deg C
+    uint8_t trans_clutch_temp;        // -40 to 214 deg C
+    uint8_t traction_motor_coil_temp; // -40 to 214 deg C
+    uint8_t traction_motor_elec_temp; // -40 to 214 deg C
+    uint8_t engine_coolant_hot_warn :1;
+    uint8_t engine_oil_hot_warn :1;
+    uint8_t trans_oil_hot_warn :1;
+    uint8_t trans_clutch_hot_warn :1;
+    uint8_t traction_motor_coil_hot_warn :1;
+    uint8_t traction_motor_elec_hot_warn :1;
+    uint8_t rc :2;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        engine_coolant_temp = UINT8_MAX;
+        engine_oil_temp = UINT8_MAX;
+        trans_oil_temp = UINT8_MAX;
+        trans_clutch_temp = UINT8_MAX;
+        traction_motor_coil_temp = UINT8_MAX;
+        traction_motor_elec_temp = UINT8_MAX;
+        rc = save;
+    }
+    void setEngineCoolantTempDegC(float deg_c) { setTempDegC(engine_coolant_temp, deg_c); }
+    void setEngineOilTempDegC(float deg_c) { setTempDegC(engine_oil_temp, deg_c); }
+    void setTransOilTempDegC(float deg_c) { setTempDegC(trans_oil_temp, deg_c); }
+    void setTransClutchTempDegC(float deg_c) { setTempDegC(trans_clutch_temp, deg_c); }
+    void setTractionMotorCoilTempDegC(float deg_c) { setTempDegC(traction_motor_coil_temp, deg_c); }
+    void setTractionMotorElecTempDegC(float deg_c) { setTempDegC(traction_motor_elec_temp, deg_c); }
+    bool engineCoolantTempValid() const { return tempValid(engine_coolant_temp); }
+    bool engineOilTempValid() const { return tempValid(engine_oil_temp); }
+    bool transOilTempValid() const { return tempValid(trans_oil_temp); }
+    bool transClutchTempValid() const { return tempValid(trans_clutch_temp); }
+    bool tractionMotorTempCoilValid() const { return tempValid(traction_motor_coil_temp); }
+    bool tractionMotorTempElecValid() const { return tempValid(traction_motor_elec_temp); }
+    float engineCoolantTempDegC() const { return tempDegC(engine_coolant_temp); }
+    float engineOilTempDegC() const { return tempDegC(engine_oil_temp); }
+    float transOilTempDegC() const { return tempDegC(trans_oil_temp); }
+    float transClutchTempDegC() const { return tempDegC(trans_clutch_temp); }
+    float tractionMotorCoilTempDegC() const { return tempDegC(traction_motor_coil_temp); }
+    float tractionMotorElecTempDegC() const { return tempDegC(traction_motor_elec_temp); }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+private:
+    static void setTempDegC(uint8_t &u, float deg_c) {
+        if (std::isfinite(deg_c)) {
+            u = std::clamp<float>(std::round(deg_c + 40), 0, UINT8_MAX - 1);
+        } else {
+            u = UINT8_MAX;
+        }
+    }
+    static bool tempValid(const uint8_t &u) {
+        return u != UINT8_MAX;
+    }
+    static float tempDegC(const uint8_t &u) {
+        if (tempValid(u)) {
+            return u - 40;
+        }
+        return NAN;
+    }
+};
+static_assert(8 == sizeof(MsgMiscReport3));
 
 struct MsgDriveModeCmd {
     static constexpr uint32_t ID = 0x2C6;
@@ -4035,10 +4343,10 @@ struct MsgRemoteReport {
         Arbitrate = 1,
     };
     enum class State : uint8_t {
-        EStop   = 0,
-        Pause   = 1,
-        Remote  = 2,
-        Control = 3,
+        EStop   = 0, // Remote e-stop
+        Pause   = 1, // Remote pause
+        Remote  = 2, // Remote control active
+        Control = 3, // DBW control allowed
     };
     static constexpr const char * modeToString(Mode x) {
         switch (x) {
@@ -5008,7 +5316,7 @@ struct MsgEcuInfoMonitor  : public MsgEcuInfo { static constexpr uint32_t ID = 0
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 77> IDS {
+static constexpr std::array<uint32_t, 80> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -5022,6 +5330,7 @@ static constexpr std::array<uint32_t, 77> IDS {
     MsgBrakeInfo::ID,
     MsgPropulsionInfo::ID,
     MsgSteerOffset::ID,
+    MsgSteerInfo::ID,
     // Commands (remote control)
     MsgSteerCmdRmt::ID,
     MsgBrakeCmdRmt::ID,
@@ -5063,6 +5372,7 @@ static constexpr std::array<uint32_t, 77> IDS {
     MsgGpioCmd::ID,
     MsgGpioReport::ID,
     MsgRemoteReport::ID,
+    MsgMiscReport3::ID,
     // Secondary reports
     MsgSteerReport2::ID,
     MsgBrakeReport2::ID,
@@ -5090,6 +5400,7 @@ static constexpr std::array<uint32_t, 77> IDS {
     MsgGpsLatLong::ID,
     MsgGpsAltitude::ID,
     MsgGpsTime::ID,
+    MsgMonitorSteerRateDebug::ID,
     // ECU info
     MsgEcuInfoGateway::ID,
     MsgEcuInfoSteer::ID,
