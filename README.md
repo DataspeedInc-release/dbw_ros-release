@@ -1,3 +1,30 @@
+## dbw_ros (jazzy) - 2.3.5-1
+
+The packages in the `dbw_ros` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --ros-distro jazzy dbw_ros` on `Mon, 30 Jun 2025 14:41:52 -0000`
+
+These packages were released:
+- `ds_dbw`
+- `ds_dbw_can`
+- `ds_dbw_joystick_demo`
+- `ds_dbw_msgs`
+
+Version of package(s) in repository `dbw_ros`:
+
+- upstream repository: https://bitbucket.org/dataspeedinc/dbw_ros.git
+- release repository: https://github.com/DataspeedInc-release/dbw_ros-release.git
+- rosdistro version: `2.3.3-1`
+- old version: `2.3.3-1`
+- new version: `2.3.5-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## dbw_ros (jazzy) - 2.3.3-1
 
 The packages in the `dbw_ros` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --ros-distro jazzy dbw_ros` on `Fri, 28 Mar 2025 16:39:55 -0000`
