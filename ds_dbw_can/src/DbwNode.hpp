@@ -57,6 +57,7 @@
 #include <ds_dbw_msgs/msg/system_report.hpp>
 #include <ds_dbw_msgs/msg/vehicle_velocity.hpp>
 #include <ds_dbw_msgs/msg/throttle_info.hpp>
+#include <ds_dbw_msgs/msg/throttle_offset.hpp>
 #include <ds_dbw_msgs/msg/brake_info.hpp>
 #include <ds_dbw_msgs/msg/propulsion_info.hpp>
 #include <ds_dbw_msgs/msg/steering_info.hpp>
@@ -163,6 +164,7 @@ private:
   CanMsgRecvCrcRc<MsgSystemReport>     msg_system_rpt_;
   CanMsgRecvCrcRc<MsgVehicleVelocity>  msg_veh_vel_;
   CanMsgRecvCrcRc<MsgThrtlInfo>        msg_thrtl_info_;
+  CanMsgRecvCrcRc<MsgThrtlOffset>      msg_thrtl_offset_;
   CanMsgRecvCrcRc<MsgBrakeInfo>        msg_brake_info_;
   CanMsgRecvCrcRc<MsgPropulsionInfo>   msg_propulsion_info_;
   CanMsgRecvCrcRc<MsgSteerInfo>        msg_steer_info_;
@@ -193,6 +195,7 @@ private:
   CanMsgRecv     <MsgSteerParamHash>   msg_steer_param_hash_;
   CanMsgRecv     <MsgBrakeParamHash>   msg_brake_param_hash_;
   CanMsgRecv     <MsgThrtlParamHash>   msg_thrtl_param_hash_;
+  CanMsgRecv     <MsgGearParamHash>    msg_gear_param_hash_;
   CanMsgRecv     <MsgSystemParamHash>  msg_system_param_hash_;
 
   // Clock for received message timestamps
@@ -306,12 +309,14 @@ private:
     uint32_t steer = 0;
     uint32_t brake = 0;
     uint32_t thrtl = 0;
+    uint32_t gear = 0;
     uint32_t system = 0;
   } param_hash_;
 
   // ECU Info
   struct {
     std::map<uint16_t, ds_dbw_msgs::msg::EcuInfo> msg;
+    std::map<Module, uint32_t> app_sig;
     std::map<Module, uint32_t> cfg_hash;
     std::map<Module, std::array<uint8_t,6>> mac;
     std::map<Module, std::string> ldate; // License date
@@ -367,6 +372,7 @@ private:
   rclcpp::Publisher<ds_dbw_msgs::msg::SystemReport>::SharedPtr pub_system_rpt_;
   rclcpp::Publisher<ds_dbw_msgs::msg::VehicleVelocity>::SharedPtr pub_veh_vel_;
   rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleInfo>::SharedPtr pub_thrtl_info_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleOffset>::SharedPtr pub_thrtl_offset_;
   rclcpp::Publisher<ds_dbw_msgs::msg::BrakeInfo>::SharedPtr pub_brake_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::PropulsionInfo>::SharedPtr pub_propulsion_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::SteeringInfo>::SharedPtr pub_steer_info_;
