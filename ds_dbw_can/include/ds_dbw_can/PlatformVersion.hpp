@@ -54,6 +54,7 @@ enum class Platform : uint8_t {
   FORD_NGDV        = 0x0A, // Ford/Oshkosh NGDV
   FCA_RU           = 0x10, // Chrysler Pacifica
   FCA_WK2          = 0x11, // Jeep Grand Cherokee
+  GM_ISV           = 0x20, // General Motors Infantry Squad Vehicle
   POLARIS_GEM      = 0x80, // Polaris GEM
   POLARIS_RZRXP    = 0x81, // Polaris RZR-XP
   POLARIS_RANGERXP = 0x82, // Polaris Ranger-XP
@@ -71,6 +72,7 @@ enum class Module : uint16_t {
   Shift = MsgEcuInfoShift::ID,
   BOO = MsgEcuInfoBOO::ID,
   Monitor = MsgEcuInfoMonitor::ID,
+  ThrtlMon = MsgEcuInfoThrtlMon::ID,
   MAX
 };
 
@@ -86,6 +88,7 @@ constexpr static const char* platformToString(Platform x) {
     case Platform::FORD_NGDV:        return "FORD_NGDV";
     case Platform::FCA_RU:           return "FCA_RU";
     case Platform::FCA_WK2:          return "FCA_WK2";
+    case Platform::GM_ISV:           return "GM_ISV";
     case Platform::POLARIS_GEM:      return "POLARIS_GEM";
     case Platform::POLARIS_RZRXP:    return "POLARIS_RZRXP";
     case Platform::POLARIS_RANGERXP: return "POLARIS_RANGERXP";
@@ -104,6 +107,7 @@ constexpr static const char* moduleToString(Module x) {
     case Module::Shift:    return "Shift   ";
     case Module::BOO:      return "BOO     ";
     case Module::Monitor:  return "Monitor ";
+    case Module::ThrtlMon: return "ThrtlMon";
     default:               return "UNKNOWN";
   }
 }
