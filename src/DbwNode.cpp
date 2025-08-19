@@ -87,49 +87,53 @@ static can_msgs::msg::Frame FrameFromDbw(const T &msg) {
 
 // Latest firmware versions
 static const PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,0))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,0))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,0))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,0))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,0))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,0))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,0))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,0))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,0))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,0))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,0))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,0))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,0))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,0))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,0))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,0))},
-  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,0))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,0))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,0))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,1))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,1))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,1))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,1))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,1))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,1))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,1))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,1))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,1))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,1))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,1))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::ThrtlMon, ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,1))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,1))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,1))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,1))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,1))},
+  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,1))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Gateway,  ModuleVersion(0,0,1))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Steer,    ModuleVersion(0,0,1))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Throttle, ModuleVersion(0,0,1))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,1))},
 });
 
 using std::placeholders::_1;
@@ -173,6 +177,7 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   pub_propulsion_info_ = create_publisher<ds_dbw_msgs::msg::PropulsionInfo>("propulsion/info", 2);
   pub_steer_info_ = create_publisher<ds_dbw_msgs::msg::SteeringInfo>("steering/info", 2);
   pub_steer_offset_ = create_publisher<ds_dbw_msgs::msg::SteeringOffset>("steering/offset", 2);
+  pub_thrtl_offset_ = create_publisher<ds_dbw_msgs::msg::ThrottleOffset>("throttle/offset", 2);
   pub_remote_rpt_ = create_publisher<ds_dbw_msgs::msg::RemoteReport>("remote/report", 2);
   pub_ulc_ = create_publisher<ds_dbw_msgs::msg::UlcReport>("ulc/report", 2);
   pub_wheel_speeds_ = create_publisher<ds_dbw_msgs::msg::WheelSpeeds>("wheel_speeds", 2);
@@ -530,7 +535,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         break;
 
       case MsgGearReport1::ID:
-        if (msg_can->dlc >= sizeof(MsgGearReport1)) {
+        if (msg_can->dlc == sizeof(MsgGearReport1)) {
           auto &recv = msg_gear_rpt_1_;
           bool fault_prev = recv.valid(stamp) && recv.msg().fault;
           if (recv.receive(*(MsgGearReport1*)msg_can->data.data(), stamp)) {
@@ -772,6 +777,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             out.header.stamp = msg_can->header.stamp;
             out.pedal_pc = msg.getPercent();
             out.pedal_qf.value = (uint8_t)msg.pedal_qf;
+            out.offset_qf.value = (uint8_t)msg.offset_qf;
             pub_monitor_thrtl_->publish(out);
           } else if (!recv.validCrc()) {
             RCLCPP_WARN(get_logger(), "Ignoring monitor thrtl with invalid CRC");
@@ -807,7 +813,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         break;
 
       case MsgSystemReport::ID:
-        if (msg_can->dlc >= sizeof(MsgSystemReport)) {
+        if (msg_can->dlc == sizeof(MsgSystemReport)) {
           auto &recv = msg_system_rpt_;
           auto system_sync_mode_prev = recv.msg().system_sync_mode;
           if (recv.receive(*(MsgSystemReport*)msg_can->data.data(), stamp)) {
@@ -895,6 +901,26 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
           }
         } else {
           RCLCPP_WARN(get_logger(), "Ignoring vehicle velocity report with invalid size of %u", msg_can->dlc);
+        }
+        break;
+
+      case MsgThrtlOffset::ID:
+        if (msg_can->dlc == sizeof(MsgThrtlOffset)) {
+          auto &recv = msg_thrtl_offset_;
+          if (recv.receive(*(MsgThrtlOffset*)msg_can->data.data(), stamp)) {
+            const auto &msg = recv.msg();
+            ds_dbw_msgs::msg::ThrottleOffset out;
+            out.header.stamp = msg_can->header.stamp;
+            out.offset_raw = msg.offsetPercent();
+            out.offset_qf.value = (uint8_t)msg.offset_qf;
+            pub_thrtl_offset_->publish(out);
+          } else if (!recv.validCrc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring throttle offset with invalid CRC");
+          } else if (!recv.validRc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring throttle offset with repeated rolling counter value");
+          }
+        } else {
+          RCLCPP_WARN(get_logger(), "Ignoring throttle offset with invalid size of %u", msg_can->dlc);
         }
         break;
 
@@ -1048,7 +1074,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         break;
 
       case MsgRemoteReport::ID:
-        if (msg_can->dlc >= sizeof(MsgRemoteReport)) {
+        if (msg_can->dlc == sizeof(MsgRemoteReport)) {
           auto &recv = msg_remote_rpt_;
           auto remote_control_mode_prev = recv.msg().remote_control_mode;
           if (recv.receive(*(MsgRemoteReport*)msg_can->data.data(), stamp)) {
@@ -2716,7 +2742,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         break;
 
       case MsgSteerParamHash::ID:
-        if (msg_can->dlc >= sizeof(MsgSteerParamHash)) {
+        if (msg_can->dlc == sizeof(MsgSteerParamHash)) {
           auto &recv = msg_steer_param_hash_;
           recv.receive(*(MsgSteerParamHash*)msg_can->data.data(), stamp);
           const auto &msg = recv.msg();
@@ -2727,7 +2753,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         }
         break;
       case MsgBrakeParamHash::ID:
-        if (msg_can->dlc >= sizeof(MsgBrakeParamHash)) {
+        if (msg_can->dlc == sizeof(MsgBrakeParamHash)) {
           auto &recv = msg_brake_param_hash_;
           recv.receive(*(MsgBrakeParamHash*)msg_can->data.data(), stamp);
           const auto &msg = recv.msg();
@@ -2738,7 +2764,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         }
         break;
       case MsgThrtlParamHash::ID:
-        if (msg_can->dlc >= sizeof(MsgThrtlParamHash)) {
+        if (msg_can->dlc == sizeof(MsgThrtlParamHash)) {
           auto &recv = msg_thrtl_param_hash_;
           recv.receive(*(MsgThrtlParamHash*)msg_can->data.data(), stamp);
           const auto &msg = recv.msg();
@@ -2748,8 +2774,19 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
           }
         }
         break;
+      case MsgGearParamHash::ID:
+        if (msg_can->dlc == sizeof(MsgGearParamHash)) {
+          auto &recv = msg_gear_param_hash_;
+          recv.receive(*(MsgGearParamHash*)msg_can->data.data(), stamp);
+          const auto &msg = recv.msg();
+          if (param_hash_.gear != msg.hash) {
+            param_hash_.gear = msg.hash;
+            RCLCPP_INFO(get_logger(), "Gear param hash: %08X", msg.hash);
+          }
+        }
+        break;
       case MsgSystemParamHash::ID:
-        if (msg_can->dlc >= sizeof(MsgSystemParamHash)) {
+        if (msg_can->dlc == sizeof(MsgSystemParamHash)) {
           auto &recv = msg_system_param_hash_;
           recv.receive(*(MsgSystemParamHash*)msg_can->data.data(), stamp);
           const auto &msg = recv.msg();
@@ -2767,7 +2804,8 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
       case MsgEcuInfoShift::ID:
       case MsgEcuInfoBOO::ID:
       case MsgEcuInfoMonitor::ID:
-        if (msg_can->dlc >= sizeof(MsgEcuInfo)) {
+      case MsgEcuInfoThrtlMon::ID:
+        if (msg_can->dlc == sizeof(MsgEcuInfo)) {
           using Mux = MsgEcuInfo::Mux;
           auto &ecu_info = ecu_info_.msg[msg_can->id];
           MsgEcuInfo msg;
@@ -2781,9 +2819,9 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
               const ModuleVersion latest = FIRMWARE_LATEST.get(version);
               const char *str_p = platformToString(version.p);
               ecu_info.name = std::string(str_p) + "_" + trim(str_m);
-              ecu_info.version = std::to_string(version.v.major())
-                         + "." + std::to_string(version.v.minor())
-                         + "." + std::to_string(version.v.build());
+              ecu_info.app_version = std::to_string(version.v.major())
+                             + "." + std::to_string(version.v.minor())
+                             + "." + std::to_string(version.v.build());
               if (firmware_.get(version) != version.v) {
                 firmware_.put(version);
                 if (latest.valid()) {
@@ -2800,6 +2838,17 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
                 }
               }
               break; }
+            case Mux::Firmware:
+              ecu_info.hw_rev = msg.firmware.hw_rev;
+              ecu_info.boot_version = std::to_string(msg.firmware.boot_major)
+                              + "." + std::to_string(msg.firmware.boot_minor);
+              ecu_info.app_signature = "XXXXXXXX";
+              snprintf(ecu_info.app_signature.data(), ecu_info.app_signature.size() + 1, "%08X", msg.firmware.app_signature);
+              if (ecu_info_.app_sig[module] != msg.firmware.app_signature) {
+                ecu_info_.app_sig[module] = msg.firmware.app_signature;
+                RCLCPP_INFO(get_logger(), "EcuInfo: %s firmware signature: %08X", str_m, msg.firmware.app_signature);
+              }
+              break;
             case Mux::CfgHash:
               ecu_info.config_hash = "XXXXXXXX";
               snprintf(ecu_info.config_hash.data(), ecu_info.config_hash.size() + 1, "%08X", msg.cfg.hash);
@@ -2921,7 +2970,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
                 date.push_back(msg.bdate0.date6);
                 ecu_info.build_date = date;
                 if (!ecu_info.name.empty()
-                 && !ecu_info.version.empty()
+                 && !ecu_info.app_version.empty()
                  && !ecu_info.mac_addr.empty()
                  && !ecu_info.build_date.empty()) {
                   ecu_info.header.stamp = msg_can->header.stamp;
