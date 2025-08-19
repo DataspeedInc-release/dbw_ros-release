@@ -1,9 +1,12 @@
 std_msgs/Header header
 
 # Info
-string name         # OEM_PLATFORM_MODULE
-string version      # x.y.z
-string mac_addr     # XX:XX:XX:XX:XX:XX
+string name          # OEM_PLATFORM_MODULE
+string app_version   # x.y.z
+string boot_version  # x.y
+string hw_rev
+string app_signature # XXXXXXXX
+string mac_addr      # XX:XX:XX:XX:XX:XX
 
 # Config
 string config_hash  # XXXXXXXX

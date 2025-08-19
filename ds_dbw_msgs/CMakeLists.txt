@@ -65,6 +65,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ThrottleCmd.msg"
   "msg/ThrottleDiagnostics.msg"
   "msg/ThrottleInfo.msg"
+  "msg/ThrottleOffset.msg"
   "msg/ThrottleReport.msg"
   "msg/TirePressures.msg"
   "msg/TrafficSignInfo.msg"
