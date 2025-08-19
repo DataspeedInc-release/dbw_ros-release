@@ -2,6 +2,12 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.6 (2025-08-18)
+------------------
+* Add ThrottleOffset message
+* Add firmware info to EcuInfo message
+* Contributors: Kevin Hallenbeck
+
 2.3.5 (2025-06-27)
 ------------------
 * Add monitor steer rate debug message
