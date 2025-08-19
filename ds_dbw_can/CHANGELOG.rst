@@ -2,6 +2,17 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.6 (2025-08-18)
+------------------
+* Bump firmware versions to match 2025/08/18 release package
+* Add GM ISV platform
+* Add EcuInfo message for throttle monitor
+* Add ThrottleOffset message
+* Add gear param hash
+* Add firmware info to EcuInfo message
+* Minor changes to CAN message parsing header
+* Contributors: Kevin Hallenbeck
+
 2.3.5 (2025-06-27)
 ------------------
 * Bump firmware versions to match 2025/06/27 release package
