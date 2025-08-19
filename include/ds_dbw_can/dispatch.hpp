@@ -1024,40 +1024,75 @@ struct MsgBrakeReport1 {
     }
     int32_t cmdRawSigned() const {
         switch (cmd_type) { // No default case, explicitly specify all cases
-            case MsgBrakeCmd::CmdType::Accel:
-            case MsgBrakeCmd::CmdType::AccelAcc:
-            case MsgBrakeCmd::CmdType::AccelAeb:
+            case CmdType::Accel:
+            case CmdType::AccelAcc:
+            case CmdType::AccelAeb:
                 if ((int16_t)(cmd << 4) != INT16_MIN) {
                     return (int16_t)(cmd << 4) >> 4; // Sign extend bit-field
                 }
                 return 0;
-            case MsgBrakeCmd::CmdType::Pressure:
-            case MsgBrakeCmd::CmdType::Torque:
-            case MsgBrakeCmd::CmdType::PedalRaw:
-            case MsgBrakeCmd::CmdType::Percent:
+            case CmdType::Pressure:
+            case CmdType::Torque:
+            case CmdType::PedalRaw:
+            case CmdType::Percent:
                 if (cmd != (uint16_t)(UINT16_MAX >> 4)) {
                     return cmd;
                 }
                 return 0;
-            case MsgBrakeCmd::CmdType::None:
-            case MsgBrakeCmd::CmdType::Calibrate:
+            case CmdType::None:
+            case CmdType::Calibrate:
                 return 0;
         }
         return 0;
     }
     bool cmdNonZero() const {
         switch (cmd_type) { // No default case, explicitly specify all cases
-            case MsgBrakeCmd::CmdType::Accel:
-            case MsgBrakeCmd::CmdType::AccelAcc:
-            case MsgBrakeCmd::CmdType::AccelAeb:
+            case CmdType::Accel:
+            case CmdType::AccelAcc:
+            case CmdType::AccelAeb:
                 return cmdRawSigned() < 0;
-            case MsgBrakeCmd::CmdType::Pressure:
-            case MsgBrakeCmd::CmdType::Torque:
-            case MsgBrakeCmd::CmdType::PedalRaw:
-            case MsgBrakeCmd::CmdType::Percent:
+            case CmdType::Pressure:
+            case CmdType::Torque:
+            case CmdType::PedalRaw:
+            case CmdType::Percent:
                 return cmdRawSigned() > 0;
-            case MsgBrakeCmd::CmdType::None:
-            case MsgBrakeCmd::CmdType::Calibrate:
+            case CmdType::None:
+            case CmdType::Calibrate:
+                return false;
+        }
+        return false;
+    }
+    bool inputDominant() const {
+        switch (cmd_type) { // No default case, explicitly specify all cases
+            case CmdType::Accel:
+            case CmdType::AccelAcc:
+            case CmdType::AccelAeb:
+            case CmdType::Torque:
+                if (input != UINT16_MAX >> 4) {
+                    constexpr uint16_t THRESH = 1000 / 4; // 1000 Nm
+                    return input > THRESH;
+                }
+                return false;
+            case CmdType::Pressure:
+                if (input != UINT16_MAX >> 4) {
+                    constexpr uint16_t THRESH = 5 / 0.05; // 5 bar
+                    return input > THRESH;
+                }
+                return false;
+            case CmdType::PedalRaw:
+                if (input != UINT16_MAX >> 4 && output != UINT16_MAX >> 4) {
+                    constexpr uint16_t THRESH = 2 / 0.025; // 2%
+                    return input > THRESH && input + THRESH > output;
+                }
+                return false;
+            case CmdType::Percent:
+                if (input != UINT16_MAX >> 4) {
+                    constexpr uint16_t THRESH = 10 / 0.025; // 10%
+                    return input > THRESH;
+                }
+                return false;
+            case CmdType::None:
+            case CmdType::Calibrate:
                 return false;
         }
         return false;
@@ -1495,7 +1530,9 @@ struct MsgThrtlCmdUlc : public MsgThrtlCmd {
 static_assert(sizeof(MsgThrtlCmdUlc) == sizeof(MsgThrtlCmd));
 struct MsgThrtlReport1 {
     static constexpr uint32_t ID = 0x102;
-    static constexpr size_t PERIOD_MS = 20;
+    static constexpr size_t PERIOD_MIN = 10;
+    static constexpr size_t PERIOD_MS  = 20;
+    static constexpr size_t PERIOD_MAX = 20;
     static constexpr size_t TIMEOUT_MS = 100;
     typedef MsgThrtlCmd::CmdType CmdType;
     uint16_t input :12; // 0.025 %, 4095=unknown
@@ -1587,6 +1624,43 @@ struct MsgThrtlReport1 {
         } else {
             return UINT16_MAX;
         }
+    }
+    float getPercentCmd() const {
+        if (cmd != UINT16_MAX >> 4) {
+            return cmd * 0.025f;
+        } else {
+            return NAN;
+        }
+    }
+    uint16_t getPercentCmdU16() const {
+        if (cmd != UINT16_MAX >> 4) {
+            constexpr uint16_t MAX = 100 / 0.025;
+            return std::min((cmd << 16) / MAX, UINT16_MAX - 1);
+        } else {
+            return UINT16_MAX;
+        }
+    }
+    float getPercentOutput() const {
+        if (output != UINT16_MAX >> 4) {
+            return output * 0.025f;
+        } else {
+            return NAN;
+        }
+    }
+    uint16_t getPercentOutputU16() const {
+        if (output != UINT16_MAX >> 4) {
+            constexpr uint16_t MAX = 100 / 0.025;
+            return std::min((output << 16) / MAX, UINT16_MAX - 1);
+        } else {
+            return UINT16_MAX;
+        }
+    }
+    bool inputDominant() const {
+        if (input != UINT16_MAX >> 4 && output != UINT16_MAX >> 4) {
+            constexpr uint16_t THRESH = 2 / 0.025; // 2%
+            return input > THRESH && input + THRESH > output;
+        }
+        return false;
     }
     void setCrc() {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
@@ -1956,6 +2030,13 @@ struct MsgGearReport3 {
     }
 };
 static_assert(8 == sizeof(MsgGearReport3));
+struct MsgGearParamHash {
+    static constexpr uint32_t ID = 0x333;
+    static constexpr size_t PERIOD_MS = 5000;
+    static constexpr size_t TIMEOUT_MS = 17500;
+    uint32_t hash;
+};
+static_assert(4 == sizeof(MsgGearParamHash));
 
 struct MsgMonitorCmd {
     static constexpr uint32_t ID = 0x215;
@@ -2140,11 +2221,13 @@ struct MsgMonitorReport3 {
 static_assert(8 == sizeof(MsgMonitorReport3));
 struct MsgMonitorThrtl {
     static constexpr uint32_t ID = 0x2A7;
-    static constexpr size_t PERIOD_MS = 20;
+    static constexpr size_t PERIOD_MIN = 10;
+    static constexpr size_t PERIOD_MS  = 20;
+    static constexpr size_t PERIOD_MAX = 20;
     static constexpr size_t TIMEOUT_MS = 100;
     uint16_t pedal_pc :12; // 0.025 %
     Quality pedal_qf :2;
-    uint8_t :2;
+    Quality offset_qf :2;
     uint8_t :4;
     uint8_t rc :4;
     uint8_t crc;
@@ -2153,14 +2236,16 @@ struct MsgMonitorThrtl {
         memset(this, 0x00, sizeof(*this));
         rc = save;
     }
-    void setPercent(float percent, Quality quality) {
+    void setPercent(float percent, Quality quality, Quality offset_quality) {
         pedal_pc = std::clamp<float>(percent / 0.025f, 0, UINT16_MAX >> 4);
         pedal_qf = quality;
+        offset_qf = offset_quality;
     }
-    void setPercentU16(uint16_t percent, Quality quality) {
+    void setPercentU16(uint16_t percent, Quality quality, Quality offset_quality) {
         constexpr uint16_t MAX = 100 / 0.025;
         pedal_pc = (percent  * MAX) / UINT16_MAX;
         pedal_qf = quality;
+        offset_qf = offset_quality;
     }
     float getPercent() const {
         return pedal_pc * 0.025f;
@@ -2674,6 +2759,59 @@ struct MsgVehicleVelocity {
     }
 };
 static_assert(8 == sizeof(MsgVehicleVelocity));
+
+struct MsgThrtlOffset {
+    static constexpr uint32_t ID = 0x10F;
+    static constexpr size_t PERIOD_MIN =   10;
+    static constexpr size_t PERIOD_MS  =  500;
+    static constexpr size_t PERIOD_MAX =  500;
+    static constexpr size_t TIMEOUT_MS = 1750;
+    int16_t offset_raw :12; // 0.0125 %
+    Quality offset_qf :2;
+    uint8_t :2;
+    uint8_t :4;
+    uint8_t rc :4;
+    uint8_t crc;
+    void reset() {
+        uint8_t save = rc;
+        memset(this, 0x00, sizeof(*this));
+        offset_qf = Quality::NoData;
+        rc = save;
+    }
+    void setOffset(float percent, Quality quality) {
+        offset_raw = std::clamp<float>(std::round(percent / 0.0125f), -(INT16_MAX >> 4), INT16_MAX >> 4);
+        offset_qf = std::isnan(percent) ? Quality::NoData : quality;
+    }
+    void setOffsetI16(int16_t percent, Quality quality) {
+        constexpr uint16_t MAX = 100 / 0.0125;
+        int32_t round = percent >= 0 ? UINT16_MAX/2 : -UINT16_MAX/2;
+        offset_raw = std::clamp<int32_t>(((percent * MAX) + round) / UINT16_MAX, -(INT16_MAX >> 4), INT16_MAX >> 4);
+        offset_qf = quality;
+    }
+    bool offsetValid() const {
+        return offset_qf == Quality::Ok
+            || offset_qf == Quality::Partial;
+    }
+    float offsetPercent() const {
+        return offset_raw * 0.0125f;
+    }
+    int16_t offsetI16() const {
+        constexpr uint16_t MAX = 100 / 0.0125;
+        return (offset_raw << 16) / MAX;
+    }
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(4 == sizeof(MsgThrtlOffset));
 
 struct MsgThrtlInfo {
     static constexpr uint32_t ID = 0x109;
@@ -5126,6 +5264,7 @@ struct MsgEcuInfo {
     static constexpr size_t PERIOD_MS = 200;
     enum class Mux : uint8_t {
         Version      = 0x00,
+        Firmware     = 0x01,
         CfgHash      = 0x04,
         MacAddr      = 0x08,
         License0     = 0x10, // Feature 0
@@ -5154,6 +5293,12 @@ struct MsgEcuInfo {
             uint16_t minor;
             uint16_t build;
         } version;
+        struct {
+            char hw_rev; // ASCII
+            uint8_t boot_major;
+            uint8_t boot_minor;
+            uint32_t app_signature;
+        } firmware;
         struct {
             uint8_t count_modified;
             uint8_t count_configured;
@@ -5310,13 +5455,14 @@ struct MsgEcuInfoThrottle : public MsgEcuInfo { static constexpr uint32_t ID = 0
 struct MsgEcuInfoShift    : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C4; };
 struct MsgEcuInfoBOO      : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C5; };
 struct MsgEcuInfoMonitor  : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C6; };
+struct MsgEcuInfoThrtlMon : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C7; };
 
 
 #pragma pack(pop) // Undo packing
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 80> IDS {
+static constexpr std::array<uint32_t, 83> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -5331,6 +5477,7 @@ static constexpr std::array<uint32_t, 80> IDS {
     MsgPropulsionInfo::ID,
     MsgSteerOffset::ID,
     MsgSteerInfo::ID,
+    MsgThrtlOffset::ID,
     // Commands (remote control)
     MsgSteerCmdRmt::ID,
     MsgBrakeCmdRmt::ID,
@@ -5388,6 +5535,7 @@ static constexpr std::array<uint32_t, 80> IDS {
     MsgSteerParamHash::ID,
     MsgBrakeParamHash::ID,
     MsgThrtlParamHash::ID,
+    MsgGearParamHash::ID,
     MsgSystemParamHash::ID,
     // Reserved
     MsgReserved1::ID,
@@ -5409,6 +5557,7 @@ static constexpr std::array<uint32_t, 80> IDS {
     MsgEcuInfoShift::ID,
     MsgEcuInfoBOO::ID,
     MsgEcuInfoMonitor::ID,
+    MsgEcuInfoThrtlMon::ID,
 };
 template <typename T, size_t N>
 static constexpr bool _is_sorted_unique(const std::array<T, N> &arr) {
