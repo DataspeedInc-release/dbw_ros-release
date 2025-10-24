@@ -33,18 +33,34 @@
  *********************************************************************/
 #pragma once
 
-#if __cplusplus < 201703L
-#warning "The C++ standard must be C++17 or newer"
+#if (__cplusplus < 201703L && !defined(_MSVC_LANG)) || (defined(_MSVC_LANG) && _MSVC_LANG < 201703L)
+#error "The C++ standard must be C++17 or newer"
 #endif
 
 #include <stdint.h>
 #include <stddef.h> // size_t
 #include <stdbool.h> // bool
 #include <string.h> // memset()
-#include <math.h> // std::round(), std::abs()
+#include <cmath> // std::round(), std::abs()
 #include <algorithm> // std::clamp()
 #include <array> // std::array
 #include <ds_dbw_can/SAE_J1850_crc.hpp>
+
+#if defined(__STRICT_ANSI__) || defined(_MSVC_LANG)
+#define typeof(x) std::decay<decltype(x)>::type
+#endif
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#ifdef _MSVC_LANG
+#error MSVC does not support unaligned bitfield packing, which breaks most message structures by padding and increasing size
+#endif
 
 namespace ds_dbw_can {
 
@@ -65,6 +81,8 @@ enum class SystemSyncMode : uint8_t {
     Disengages = 1,
     AllOrNone = 2,
     AllOrNoneWithBtn = 3,
+    Partial = 4,
+    PartialWithBtn = 5,
 };
 static constexpr const char * systemSyncModeToString(SystemSyncMode x) {
     switch (x) {
@@ -72,8 +90,10 @@ static constexpr const char * systemSyncModeToString(SystemSyncMode x) {
         case SystemSyncMode::Disengages:       return "Disengages";
         case SystemSyncMode::AllOrNone:        return "AllOrNone";
         case SystemSyncMode::AllOrNoneWithBtn: return "AllOrNoneWithBtn";
-        default:                               return "Unknown";
+        case SystemSyncMode::Partial:          return "Partial";
+        case SystemSyncMode::PartialWithBtn:   return "PartialWithBtn";
     }
+    return "Unknown";
 }
 
 enum class CmdSrc : uint8_t {
@@ -446,7 +466,7 @@ struct MsgSteerReport2 {
     uint8_t fault_actuator :1;
     uint8_t :1;
     uint8_t :1;
-    uint8_t :1;
+    uint8_t hardware_disable :1;
     uint8_t actuator_temp; // 1 degC, -40 to 214 degC
     uint8_t :8;
     uint8_t limit_rate; // 4 deg/s, 255=unlimited
@@ -1202,7 +1222,7 @@ struct MsgBrakeReport2 {
     uint8_t fault_actuator :1;
     uint8_t :1;
     uint8_t :1;
-    uint8_t :1;
+    uint8_t hardware_disable :1;
     uint8_t :8;
     uint16_t limit_value :10; // 0.1 %, 0.2 bar, 0.02 m/s^2, 1023=unlimited
     uint8_t :2;
@@ -1694,7 +1714,7 @@ struct MsgThrtlReport2 {
     uint8_t fault_sensor :1;
     uint8_t :1;
     uint8_t :1;
-    uint8_t :1;
+    uint8_t hardware_disable :1;
     uint8_t :8;
     uint8_t :8;
     uint8_t :8;
@@ -1799,7 +1819,9 @@ struct MsgGearCmd {
     Gear cmd :4;
     uint8_t :4;
     uint8_t :8;
-    uint8_t :8;
+    uint8_t :3;
+    uint8_t return_to_park :1;
+    uint8_t :4;
     uint8_t crc;
     void reset() {
         memset(this, 0x00, sizeof(*this));
@@ -2379,10 +2401,10 @@ struct MsgSystemCmd {
 static_assert(2 == sizeof(MsgSystemCmd));
 struct MsgSystemReport {
     static constexpr uint32_t ID = 0x106;
-    static constexpr size_t PERIOD_MIN = 20;
+    static constexpr size_t PERIOD_MIN = 10;
     static constexpr size_t PERIOD_MS  = 100;
     static constexpr size_t PERIOD_MAX = 100;
-    static constexpr size_t TIMEOUT_MS = 250;
+    static constexpr size_t TIMEOUT_MS = 350;
     enum class State : uint8_t {
         Manual = 0, // Not ready
         Ready  = 1,
@@ -2414,9 +2436,13 @@ struct MsgSystemReport {
         OverrideOtherBrake     = 0x29,
         OverrideOtherThrtl     = 0x2A,
         OverrideOtherGear      = 0x2B,
+        HardwareDisableSteer   = 0x2C,
+        HardwareDisableBrake   = 0x2D,
+        HardwareDisableThrtl   = 0x2E,
         NotReadySteer          = 0x30,
         NotReadyBrake          = 0x31,
         NotReadyThrtl          = 0x32,
+        MissingCmdAll          = 0x37,
         MissingCmdSteer        = 0x38,
         MissingCmdBrake        = 0x39,
         MissingCmdThrtl        = 0x3A,
@@ -2426,6 +2452,7 @@ struct MsgSystemReport {
         NotEnableCmdSteer      = 0xC0,
         NotEnableCmdBrake      = 0xC1,
         NotEnableCmdThrtl      = 0xC2,
+        DriverSeatBelt         = 0xE0,
         SystemReengageDelay    = 0xF8,
         SystemLockout          = 0xFA,
         SystemDisabled         = 0xFE,
@@ -2444,6 +2471,8 @@ struct MsgSystemReport {
         SteerRptFault          = 0x25,
         SteerRptOverride       = 0x26,
         SteerRptDisengage      = 0x27,
+        SteerRptHwDisable      = 0x28,
+        SteerRptTimeout        = 0x29,
         BrakeCmdDisengage      = 0x41,
         BrakeCmdInvalidCrc     = 0x42,
         BrakeCmdInvalidRc      = 0x43,
@@ -2451,6 +2480,8 @@ struct MsgSystemReport {
         BrakeRptFault          = 0x45,
         BrakeRptOverride       = 0x46,
         BrakeRptDisengage      = 0x47,
+        BrakeRptHwDisable      = 0x48,
+        BrakeRptTimeout        = 0x49,
         ThrtlCmdDisengage      = 0x61,
         ThrtlCmdInvalidCrc     = 0x62,
         ThrtlCmdInvalidRc      = 0x63,
@@ -2458,11 +2489,17 @@ struct MsgSystemReport {
         ThrtlRptFault          = 0x65,
         ThrtlRptOverride       = 0x66,
         ThrtlRptDisengage      = 0x67,
+        ThrtlRptHwDisable      = 0x68,
+        ThrtlRptTimeout        = 0x69,
         GearRptFault           = 0x85,
         GearRptOverride        = 0x86,
+        GearRptTimeout         = 0x89,
         ExternalBrake          = 0xA0,
+        DriverSeatBelt         = 0xB0,
+        DriverDoor             = 0xB1,
         SystemDisableCmd       = 0xC0,
         SystemDisableBtn       = 0xC1,
+        SystemEngageTimeout    = 0xC4,
         Unknown                = 0xFF,
     };
     static constexpr const char * reasonToString(ReasonNotReady x) {
@@ -2491,9 +2528,13 @@ struct MsgSystemReport {
             case ReasonNotReady::OverrideOtherBrake:     return "OverrideOtherBrake";
             case ReasonNotReady::OverrideOtherThrtl:     return "OverrideOtherThrtl";
             case ReasonNotReady::OverrideOtherGear:      return "OverrideOtherGear";
+            case ReasonNotReady::HardwareDisableSteer:   return "HardwareDisableSteer";
+            case ReasonNotReady::HardwareDisableBrake:   return "HardwareDisableBrake";
+            case ReasonNotReady::HardwareDisableThrtl:   return "HardwareDisableThrtl";
             case ReasonNotReady::NotReadySteer:          return "NotReadySteer";
             case ReasonNotReady::NotReadyBrake:          return "NotReadyBrake";
             case ReasonNotReady::NotReadyThrtl:          return "NotReadyThrtl";
+            case ReasonNotReady::MissingCmdAll:          return "MissingCmdAll";
             case ReasonNotReady::MissingCmdSteer:        return "MissingCmdSteer";
             case ReasonNotReady::MissingCmdBrake:        return "MissingCmdBrake";
             case ReasonNotReady::MissingCmdThrtl:        return "MissingCmdThrtl";
@@ -2503,6 +2544,7 @@ struct MsgSystemReport {
             case ReasonNotReady::NotEnableCmdSteer:      return "NotEnableCmdSteer";
             case ReasonNotReady::NotEnableCmdBrake:      return "NotEnableCmdBrake";
             case ReasonNotReady::NotEnableCmdThrtl:      return "NotEnableCmdThrtl";
+            case ReasonNotReady::DriverSeatBelt:         return "DriverSeatBelt";
             case ReasonNotReady::SystemReengageDelay:    return "SystemReengageDelay";
             case ReasonNotReady::SystemLockout:          return "SystemLockout";
             case ReasonNotReady::SystemDisabled:         return "SystemDisabled";
@@ -2524,6 +2566,8 @@ struct MsgSystemReport {
             case ReasonDisengage::SteerRptFault:          return "SteerRptFault";
             case ReasonDisengage::SteerRptOverride:       return "SteerRptOverride";
             case ReasonDisengage::SteerRptDisengage:      return "SteerRptDisengage";
+            case ReasonDisengage::SteerRptHwDisable:      return "SteerRptHwDisable";
+            case ReasonDisengage::SteerRptTimeout:        return "SteerRptTimeout";
             case ReasonDisengage::BrakeCmdDisengage:      return "BrakeCmdDisengage";
             case ReasonDisengage::BrakeCmdInvalidCrc:     return "BrakeCmdInvalidCrc";
             case ReasonDisengage::BrakeCmdInvalidRc:      return "BrakeCmdInvalidRc";
@@ -2531,6 +2575,8 @@ struct MsgSystemReport {
             case ReasonDisengage::BrakeRptFault:          return "BrakeRptFault";
             case ReasonDisengage::BrakeRptOverride:       return "BrakeRptOverride";
             case ReasonDisengage::BrakeRptDisengage:      return "BrakeRptDisengage";
+            case ReasonDisengage::BrakeRptHwDisable:      return "BrakeRptHwDisable";
+            case ReasonDisengage::BrakeRptTimeout:        return "BrakeRptTimeout";
             case ReasonDisengage::ThrtlCmdDisengage:      return "ThrtlCmdDisengage";
             case ReasonDisengage::ThrtlCmdInvalidCrc:     return "ThrtlCmdInvalidCrc";
             case ReasonDisengage::ThrtlCmdInvalidRc:      return "ThrtlCmdInvalidRc";
@@ -2538,11 +2584,17 @@ struct MsgSystemReport {
             case ReasonDisengage::ThrtlRptFault:          return "ThrtlRptFault";
             case ReasonDisengage::ThrtlRptOverride:       return "ThrtlRptOverride";
             case ReasonDisengage::ThrtlRptDisengage:      return "ThrtlRptDisengage";
+            case ReasonDisengage::ThrtlRptHwDisable:      return "ThrtlRptHwDisable";
+            case ReasonDisengage::ThrtlRptTimeout:        return "ThrtlRptTimeout";
             case ReasonDisengage::GearRptFault:           return "GearRptFault";
             case ReasonDisengage::GearRptOverride:        return "GearRptOverride";
+            case ReasonDisengage::GearRptTimeout:         return "GearRptTimeout";
             case ReasonDisengage::ExternalBrake:          return "ExternalBrake";
+            case ReasonDisengage::DriverSeatBelt:         return "DriverSeatBelt";
+            case ReasonDisengage::DriverDoor:             return "DriverDoor";
             case ReasonDisengage::SystemDisableCmd:       return "SystemDisableCmd";
             case ReasonDisengage::SystemDisableBtn:       return "SystemDisableBtn";
+            case ReasonDisengage::SystemEngageTimeout:    return "SystemEngageTimeout";
             case ReasonDisengage::Unknown:                return "Unknown";
         }
         return "Unknown";
@@ -5221,7 +5273,7 @@ struct MsgGpsAltitude {
         return crc == crc8(ID, this, offsetof(typeof(*this), crc));
     }
 private:
-    static constexpr float fmodPos(float a, float b) {
+    static float fmodPos(float a, float b) {
         float x = std::fmod(a, b);
         return x >= 0 ? x : x + b;
     }
@@ -5571,3 +5623,7 @@ static constexpr bool _is_sorted_unique(const std::array<T, N> &arr) {
 static_assert(_is_sorted_unique(IDS));
 
 } // namespace ds_dbw_can
+
+#if defined(__STRICT_ANSI__) || defined(_MSVC_LANG)
+#undef typeof
+#endif
