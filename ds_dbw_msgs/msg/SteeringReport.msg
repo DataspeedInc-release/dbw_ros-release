@@ -27,6 +27,9 @@ bool bad_rc # Repeated rolling counter on most recent command
 # Degradation of any kind
 bool degraded
 
+# Control disabled in hardware due to external electrical signal
+bool hardware_disable
+
 # Actuator temperature
 float32 actuator_temp # degC
 

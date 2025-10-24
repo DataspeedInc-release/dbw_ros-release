@@ -12,8 +12,16 @@ ROS2 interface to Dataspeed drive-by-wire platforms with modern DBW2 firmware. S
     * See [dbw.launch.xml](ds_dbw_can/launch/dbw.launch.xml) for a complete list of args
 
 # Socketcan
+
 Add `dataspeed_can:=false socketcan:=true socketcan_dev:=can0` to the launch commands above to use socketcan hardware instead of the Dataspeed USB CAN Tool.
-Make sure to initialize the socketcan device and set the bitrate to 500k first.
+
+Make sure to initialize the socketcan device and set the bitrate to 500k first:
+```bash
+sudo ip link set can0 type can bitrate 500000
+sudo ip link set up can0
+```
+
+Use `socketcan_internal:=true` instead of `socketcan:=true` to send/receive CAN messages in the DBW node instead of ROS topics pub/sub. This is useful to reduce CPU usage by removing the ROS middleware overhead between the CAN and DBW nodes on resource constrained systems.
 
 # Binaries
 
@@ -33,5 +41,5 @@ Make sure to initialize the socketcan device and set the bitrate to 500k first.
 
 * Use this option to install ROS2 and this SDK on a clean Ubuntu install.
 * This should ONLY be run on a fresh install of Ubuntu Desktop [24.04](http://releases.ubuntu.com/24.04/)/[22.04](http://releases.ubuntu.com/22.04/).
-* Paste the following into a terminal to install ROS2 and this SDK. This script will change some operating system parameters, install ROS2 [Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html)/[Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), install the SDK, and configure the joystick demo with rviz to run at startup.
+* Paste the following into a terminal to install ROS2 and this SDK. This script will change some operating system parameters, install ROS2 [Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html)/[Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html), install the SDK, and configure the joystick demo to run at startup.
 * ```bash <(wget -q -O - https://bitbucket.org/DataspeedInc/dbw_ros/raw/ros2/ds_dbw/scripts/ros_install.bash)```
