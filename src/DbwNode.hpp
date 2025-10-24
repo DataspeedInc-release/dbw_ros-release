@@ -101,6 +101,9 @@
 // Platform and module version map
 #include <ds_dbw_can/PlatformMap.hpp>
 
+// SocketCAN interface
+#include "CanSocket.hpp"
+
 namespace ds_dbw_can {
 
 class DbwNode : public rclcpp::Node {
@@ -238,8 +241,7 @@ private:
   bool overrideOther(Stamp stamp) const {
     return (msg_steer_rpt_1_.valid(stamp) && msg_steer_rpt_1_.msg().override_other && !msg_steer_rpt_1_.msg().timeout)
         || (msg_brake_rpt_1_.valid(stamp) && msg_brake_rpt_1_.msg().override_other && !msg_brake_rpt_1_.msg().timeout)
-        || (msg_thrtl_rpt_1_.valid(stamp) && msg_thrtl_rpt_1_.msg().override_other && !msg_thrtl_rpt_1_.msg().timeout)
-        || (msg_gear_rpt_1_.valid(stamp)  && msg_gear_rpt_1_.msg().override_other);
+        || (msg_thrtl_rpt_1_.valid(stamp) && msg_thrtl_rpt_1_.msg().override_other && !msg_thrtl_rpt_1_.msg().timeout);
   }
   bool overrideLatched(Stamp stamp) const {
     return (msg_steer_rpt_1_.valid(stamp) && msg_steer_rpt_1_.msg().override_latched && !msg_steer_rpt_1_.msg().timeout)
@@ -335,10 +337,16 @@ private:
   // Frame ID
   std::string frame_id_ = "base_footprint";
 
+  // Use system enable/disable buttons
+  bool buttons_ = true;
+
   // Warning print options
   bool warn_crc_ = true;
   bool warn_cmds_ = true;
   bool warn_unknown_ = true;
+
+  // Print faults in monitor reports
+  bool monitor_prints_ = true;
 
   // Subscribed topics
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr sub_enable_;
@@ -415,6 +423,14 @@ private:
                   std::abs((rclcpp::Time(stamp0) - rclcpp::Time(stamp1)).nanoseconds()) / 1e6, name);
     }
   }
+
+  // SocketCAN interface
+  template <typename T>
+  void publishCAN(const T &msg);
+  void recvSocketCAN(const can_frame& frame);
+  bool socketcan_internal_ = false;
+  std::string socketcan_dev_ = "can0";
+  ds_dbw_can::CanSocket can_socket_;
 };
 
 } // namespace ds_dbw_can
