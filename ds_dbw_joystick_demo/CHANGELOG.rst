@@ -2,6 +2,22 @@
 Changelog for package ds_dbw_joystick_demo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.9 (2025-10-24)
+------------------
+* Add option to send/receive CAN messages with socketCAN instead of ROS topics
+* Document additional launch args
+* Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
+2.3.8 (2025-09-17)
+------------------
+* Revert "Remove option to ignore system enable/disable buttons"
+  This reverts commit dc9007f0ba1be1108474dc17c1b27b3a14b01d9c.
+* Add option to disable prints for faults in monitor reports
+* Contributors: Kevin Hallenbeck
+
+2.3.7 (2025-08-21)
+------------------
+
 2.3.6 (2025-08-18)
 ------------------
 

@@ -2,6 +2,34 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.9 (2025-10-24)
+------------------
+* Bump firmware versions to match 2025/10/24 release package
+* Improve compiler portability for CAN message C++ header
+* Add gear command return-to-park flag
+* Use ros2_socketcan launch.xml instead of internal copies of launch.py
+* Add option to send/receive CAN messages with socketCAN instead of ROS topics
+* Remove invalid null characters from EcuInfo message strings
+* Fix firmware build date in EcuInfo message
+* Add system reasons for driver seat-belt and driver door open event
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck, Micho Radovnikovich
+
+2.3.8 (2025-09-17)
+------------------
+* Bump firmware versions to match 2025/09/17 release package
+* Revert "Remove option to ignore system enable/disable buttons"
+  This reverts commit dc9007f0ba1be1108474dc17c1b27b3a14b01d9c.
+* Add SystemSyncMode Partial/PartialWithBtn
+* Add option to disable prints for faults in monitor reports
+* Contributors: Kevin Hallenbeck
+
+2.3.7 (2025-08-21)
+------------------
+* Don't let override_other flag in GearReport disable DBW
+* GM ISV firmware version
+* Add hardware disable status
+* Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
 2.3.6 (2025-08-18)
 ------------------
 * Bump firmware versions to match 2025/08/18 release package
