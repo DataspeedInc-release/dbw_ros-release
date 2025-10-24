@@ -5,13 +5,20 @@
   <arg name="sys" default="true"/>
   <arg name="dataspeed_can" default="true" />
   <arg name="socketcan" default="false" />
+  <arg name="socketcan_internal" default="false" />
   <arg name="socketcan_dev" default="can0" />
+  <arg name="warn_cmds" default="true" />
+  <arg name="buttons" default="true"/>
+  <arg name="monitor_prints" default="true" />
   <group if="$(var sys)">
     <include file="$(find-pkg-share ds_dbw_can)/launch/dbw.launch.xml" >
       <arg name="dataspeed_can" value="$(var dataspeed_can)" />
       <arg name="socketcan" value="$(var socketcan)" />
+      <arg name="socketcan_internal" value="$(var socketcan_internal)" />
       <arg name="socketcan_dev" value="$(var socketcan_dev)" />
-      <arg name="warn_cmds" value="true" />
+      <arg name="warn_cmds" value="$(var warn_cmds)" />
+      <arg name="buttons" value="$(var buttons)" />
+      <arg name="monitor_prints" value="$(var monitor_prints)" />
     </include>
   </group>
 
