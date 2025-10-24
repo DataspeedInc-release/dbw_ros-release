@@ -28,6 +28,9 @@ bool bad_rc # Repeated rolling counter on most recent command
 # Degradation of any kind
 bool degraded
 
+# Control disabled in hardware due to external electrical signal
+bool hardware_disable
+
 # Calculated limit vs vehicle speed
 float32 limit_value # percent
 

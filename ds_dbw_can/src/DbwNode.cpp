@@ -66,9 +66,15 @@ static std::string trim(const std::string &str) {
     return rtrim(ltrim(str));
 }
 
+// Remove null characters in string
+static void trim0(std::string &str) {
+  str.erase(std::remove(str.begin(), str.end(), '\0'), str.end());
+}
+
+// Timeout between two timestamps
 static bool timeoutMs(rclcpp::Time stamp,
-               rclcpp::Time prev,
-               uint32_t timeout_ms) {
+                      rclcpp::Time prev,
+                      uint32_t timeout_ms) {
   int64_t diff_ns = (stamp - prev).nanoseconds();
   int64_t timeout_ns = timeout_ms * 1000000;
   return diff_ns > timeout_ns;
@@ -77,6 +83,7 @@ static bool timeoutMs(rclcpp::Time stamp,
 // Convert specific DBW message to ROS CAN message
 template <typename T>
 static can_msgs::msg::Frame FrameFromDbw(const T &msg) {
+  static_assert(sizeof(msg) <= 8);
   can_msgs::msg::Frame frame;
   frame.id = msg.ID;
   frame.is_extended = false;
@@ -85,55 +92,66 @@ static can_msgs::msg::Frame FrameFromDbw(const T &msg) {
   return frame;
 }
 
+// Convert specific DBW message to Socket CAN
+template <typename T>
+static can_frame SocketCanFrameFromDbw(const T& msg) {
+  static_assert(sizeof(msg) <= 8);
+  can_frame frame;
+  frame.can_id = msg.ID;
+  frame.len = sizeof(msg);
+  memcpy(frame.data, &msg, sizeof(msg));
+  return frame;
+}
+
 // Latest firmware versions
 static const PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,1))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,1))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,1))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,1))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,1))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,1))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,1))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,1))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,1))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,1))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,1))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::ThrtlMon, ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,1))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,1))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,1))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,1))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,1))},
-  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,1))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Gateway,  ModuleVersion(0,0,1))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Steer,    ModuleVersion(0,0,1))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Throttle, ModuleVersion(0,0,1))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,1))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,1))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,3))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,3))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,3))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,3))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,3))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,3))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,3))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,3))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,3))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,3))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,3))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::ThrtlMon, ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,3))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,3))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,3))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,3))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,3))},
+  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,3))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Gateway,  ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Steer,    ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Throttle, ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,3))},
 });
 
 using std::placeholders::_1;
@@ -152,16 +170,27 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   // Frame ID
   frame_id_ = declare_parameter<std::string>("frame_id", frame_id_);
 
+  // Use system enable/disable buttons
+  buttons_ = declare_parameter<bool>("buttons", buttons_);
+
   // Warn on received CRC errors, commands, and unknown messages
   warn_crc_ = declare_parameter<bool>("warn_crc", warn_crc_);
   warn_cmds_ = declare_parameter<bool>("warn_cmds", warn_cmds_);
   warn_unknown_ = declare_parameter<bool>("warn_unknown", warn_unknown_);
 
+  // Print faults in monitor reports
+  monitor_prints_ = declare_parameter<bool>("monitor_prints", monitor_prints_);
+
   // Print time delta between time synced messages
   debug_sync_ = declare_parameter<bool>("debug_sync", debug_sync_);
 
+  // ROS or SocketCAN
+  socketcan_internal_ = declare_parameter<bool>("socketcan_internal", socketcan_internal_);
+
   // Setup Publishers
-  pub_can_ = create_publisher<can_msgs::msg::Frame>("can_tx", 10);
+  if (!socketcan_internal_) {
+    pub_can_ = create_publisher<can_msgs::msg::Frame>("can_tx", 10);
+  }
   pub_steer_rpt_ = create_publisher<ds_dbw_msgs::msg::SteeringReport>("steering/report", 2);
   pub_steer_diag_ = create_publisher<ds_dbw_msgs::msg::SteeringDiagnostics>("steering/diag", 2);
   pub_brake_rpt_ = create_publisher<ds_dbw_msgs::msg::BrakeReport>("brake/report", 2);
@@ -205,9 +234,11 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   publishDbwEnabled();
 
   // Setup Subscribers
+  if (!socketcan_internal_) {
+    sub_can_ = create_subscription<can_msgs::msg::Frame>("can_rx", 100, std::bind(&DbwNode::recvCAN, this, _1));
+  }
   sub_enable_ = create_subscription<std_msgs::msg::Empty>("enable", 10, std::bind(&DbwNode::recvEnable, this, _1));
   sub_disable_ = create_subscription<std_msgs::msg::Empty>("disable", 10, std::bind(&DbwNode::recvDisable, this, _1));
-  sub_can_ = create_subscription<can_msgs::msg::Frame>("can_rx", 100, std::bind(&DbwNode::recvCAN, this, _1));
   sub_steer_ = create_subscription<ds_dbw_msgs::msg::SteeringCmd>("steering/cmd", 1, std::bind(&DbwNode::recvSteeringCmd, this, _1));
   sub_brake_ = create_subscription<ds_dbw_msgs::msg::BrakeCmd>("brake/cmd", 1, std::bind(&DbwNode::recvBrakeCmd, this, _1));
   sub_thrtl_ = create_subscription<ds_dbw_msgs::msg::ThrottleCmd>("throttle/cmd", 1, std::bind(&DbwNode::recvThrottleCmd, this, _1));
@@ -220,8 +251,29 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   sub_monitor_cmd_ = create_subscription<ds_dbw_msgs::msg::MonitorCmd>("monitor/cmd", 1, std::bind(&DbwNode::recvMonitorCmd, this, _1));
   sub_calibrate_steering_ = create_subscription<std_msgs::msg::Empty>("steering/calibrate", 1, std::bind(&DbwNode::recvSteeringCalibrate, this, _1));
 
+  // Setup SocketCAN
+  if (socketcan_internal_) {
+    socketcan_dev_ = declare_parameter<std::string>("socketcan_dev", socketcan_dev_);
+    if (can_socket_.init(socketcan_dev_)) {
+      can_socket_.setReceiveCallback(std::bind(&DbwNode::recvSocketCAN, this, std::placeholders::_1));
+      can_socket_.startReceiving();
+    } else {
+      RCLCPP_ERROR(get_logger(), "Failed to initialize CAN socket on device %s", socketcan_dev_.c_str());
+    }
+  }
+
   // Setup Timer
   timer_ = create_wall_timer(std::chrono::milliseconds(50), std::bind(&DbwNode::timerCallback, this));
+}
+
+template <typename T>
+void DbwNode::publishCAN(const T &msg) {
+  static_assert(sizeof(msg) <= 8);
+  if (socketcan_internal_) {
+    can_socket_.sendFrame(SocketCanFrameFromDbw(msg));
+  } else {
+    pub_can_->publish(FrameFromDbw(msg));
+  }
 }
 
 void DbwNode::recvEnable(const std_msgs::msg::Empty::ConstSharedPtr) {
@@ -230,10 +282,10 @@ void DbwNode::recvEnable(const std_msgs::msg::Empty::ConstSharedPtr) {
     enableSystem();
   } else {
     // Queue clear for steer/brake/throttle, followed by system enable
-    msg_steer_cmd_clear_ = true;
-    msg_brake_cmd_clear_ = true;
-    msg_thrtl_cmd_clear_ = true;
-    msg_ulc_cmd_clear_ = true;
+    msg_steer_cmd_clear_ = msg_steer_rpt_1_.valid(stamp) && msg_steer_rpt_1_.msg().override_latched;
+    msg_brake_cmd_clear_ = msg_brake_rpt_1_.valid(stamp) && msg_brake_rpt_1_.msg().override_latched;
+    msg_thrtl_cmd_clear_ = msg_thrtl_rpt_1_.valid(stamp) && msg_thrtl_rpt_1_.msg().override_latched;
+    msg_ulc_cmd_clear_ = msg_ulc_rpt_.valid(stamp) && msg_ulc_rpt_.msg().override_latched;
     msg_system_cmd_enable_ = true;
   }
 }
@@ -254,8 +306,17 @@ void DbwNode::recvDisable(const std_msgs::msg::Empty::ConstSharedPtr) {
     msg_system_cmd_.cmd = MsgSystemCmd::Cmd::Disable;
     msg_system_cmd_.rc++;
     msg_system_cmd_.setCrc();
-    pub_can_->publish(FrameFromDbw(msg_system_cmd_));
+    publishCAN(msg_system_cmd_);
   }
+}
+
+void DbwNode::recvSocketCAN(const can_frame& frame) {
+  auto msg_can = std::make_shared<can_msgs::msg::Frame>();
+  msg_can->header.stamp = get_clock()->now();
+  msg_can->id = frame.can_id;
+  msg_can->dlc = frame.can_dlc;
+  memcpy(msg_can->data.data(), frame.data, std::min((size_t)frame.can_dlc, msg_can->data.max_size()));
+  recvCAN(msg_can);
 }
 
 void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
@@ -297,6 +358,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             if (msg_steer_rpt_2_.valid(stamp)) {
               const auto &msg2 = msg_steer_rpt_2_.msg();
               out.degraded = msg2.degraded;
+              out.hardware_disable = msg2.hardware_disable;
               out.actuator_temp = msg2.actuatorTempDegC();
               out.limit_rate = msg2.getLimitRateDegS();
               out.limit_value = msg2.getLimitValueDeg();
@@ -401,6 +463,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             if (msg_brake_rpt_2_.valid(stamp)) {
               const auto &msg2 = msg_brake_rpt_2_.msg();
               out.degraded = msg2.degraded;
+              out.hardware_disable = msg2.hardware_disable;
               using Mode = MsgBrakeReport2::BrkAvlMode;
               switch (msg2.brake_available_mux) {
                 default:                     out.limit_value = NAN; break;
@@ -493,6 +556,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             if (msg_thrtl_rpt_2_.valid(stamp)) {
               const auto &msg2 = msg_thrtl_rpt_2_.msg();
               out.degraded = msg2.degraded;
+              out.hardware_disable = msg2.hardware_disable;
               out.limit_value = msg2.getLimitValuePc();
               out.cmd_src.value = (uint8_t)msg2.cmd_src;
             } else {
@@ -670,25 +734,27 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
               out.fault_system_param =   (uint8_t)msg3.fault_system_param;
             }
             pub_monitor_rpt_->publish(out);
-            if (msg.fault) {
-              RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault");
-            } else if (fault_prev) {
-              RCLCPP_INFO(get_logger(), "Monitor fault cleared");
+            if (monitor_prints_) {
+              if (msg.shutoff) {
+                RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor shutoff");
+              } else if (msg.shutoff_on_motion) {
+                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor shutoff if vehicle starts moving");
+              }
+              if (msg.fault) {
+                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault");
+              } else if (fault_prev) {
+                RCLCPP_INFO(get_logger(), "Monitor fault cleared");
+              }
+              constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
+              if (msg.fault_test == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Test"); }
+              if (msg.fault_system == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to system enable/disable"); }
+              if (msg.fault_steer == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to steer control"); }
+              if (msg.fault_brake == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to brake control"); }
+              if (msg.fault_thrtl == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to throttle control"); }
+              if (msg.fault_gear == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to gear control"); }
+              if (msg.fault_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to the ULC"); }
+              if (msg.fault_vehicle_velocity == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Vehicle velocity measurement mismatch with OEM"); }
             }
-            if (msg.shutoff) {
-              RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor shutoff");
-            } else if (msg.shutoff_on_motion) {
-              RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor shutoff if vehicle starts moving");
-            }
-            constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
-            if (msg.fault_test == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Test"); }
-            if (msg.fault_system == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to system enable/disable"); }
-            if (msg.fault_steer == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to steer control"); }
-            if (msg.fault_brake == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to brake control"); }
-            if (msg.fault_thrtl == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to throttle control"); }
-            if (msg.fault_gear == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to gear control"); }
-            if (msg.fault_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault related to the ULC"); }
-            if (msg.fault_vehicle_velocity == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Vehicle velocity measurement mismatch with OEM"); }
           } else if (!recv.validCrc()) {
             RCLCPP_WARN(get_logger(), "Ignoring monitor report 1 with invalid CRC");
           } else if (!recv.validRc()) {
@@ -703,28 +769,30 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         if (msg_can->dlc == sizeof(MsgMonitorReport2)) {
           auto &recv = msg_monitor_rpt_2_;
           if (recv.receive(*(MsgMonitorReport2*)msg_can->data.data(), stamp)) {
-            const auto &msg = recv.msg();
-            constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
-            if (msg.fault_steer_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering wheel angle measurement mismatch with OEM"); }
-            if (msg.fault_steer_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering column torque measurement mismatch with OEM"); }
-            if (msg.fault_steer_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering parameter mismatch with DBW"); }
-            if (msg.fault_steer_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering limit calculation mismatch with DBW"); }
-            if (msg.fault_steer_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering override calculation mismatch with DBW"); }
-            if (msg.fault_steer_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command mismatch with OEM and DBW"); }
-            if (msg.fault_steer_cmd_rate == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command rate faster than DBW and limit"); }
-            if (msg.fault_steer_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command without matching command enable"); }
-            if (msg.fault_steer_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command with system disabled"); }
-            if (msg.fault_steer_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command with override"); }
-            if (msg.fault_brake_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator output torque/pressure measurement mismatch with OEM"); }
-            if (msg.fault_brake_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake pedal input torque/pressure measurement mismatch with OEM"); }
-            if (msg.fault_brake_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake parameter mismatch with DBW"); }
-            if (msg.fault_brake_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake limit calculation mismatch with DBW"); }
-            if (msg.fault_brake_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake override calculation mismatch with DBW"); }
-            if (msg.fault_brake_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command mismatch with OEM and DBW"); }
-            if (msg.fault_brake_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake command generated by ULC command without matching ULC command"); }
-            if (msg.fault_brake_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command without matching command enable"); }
-            if (msg.fault_brake_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command with system disabled"); }
-            if (msg.fault_brake_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command with override"); }
+            if (monitor_prints_) {
+              const auto &msg = recv.msg();
+              constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
+              if (msg.fault_steer_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering wheel angle measurement mismatch with OEM"); }
+              if (msg.fault_steer_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering column torque measurement mismatch with OEM"); }
+              if (msg.fault_steer_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering parameter mismatch with DBW"); }
+              if (msg.fault_steer_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering limit calculation mismatch with DBW"); }
+              if (msg.fault_steer_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering override calculation mismatch with DBW"); }
+              if (msg.fault_steer_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command mismatch with OEM and DBW"); }
+              if (msg.fault_steer_cmd_rate == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command rate faster than DBW and limit"); }
+              if (msg.fault_steer_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command without matching command enable"); }
+              if (msg.fault_steer_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command with system disabled"); }
+              if (msg.fault_steer_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Steering actuator command with override"); }
+              if (msg.fault_brake_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator output torque/pressure measurement mismatch with OEM"); }
+              if (msg.fault_brake_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake pedal input torque/pressure measurement mismatch with OEM"); }
+              if (msg.fault_brake_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake parameter mismatch with DBW"); }
+              if (msg.fault_brake_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake limit calculation mismatch with DBW"); }
+              if (msg.fault_brake_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake override calculation mismatch with DBW"); }
+              if (msg.fault_brake_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command mismatch with OEM and DBW"); }
+              if (msg.fault_brake_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake command generated by ULC command without matching ULC command"); }
+              if (msg.fault_brake_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command without matching command enable"); }
+              if (msg.fault_brake_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command with system disabled"); }
+              if (msg.fault_brake_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Brake actuator command with override"); }
+            }
           } else if (!recv.validCrc()) {
             RCLCPP_WARN(get_logger(), "Ignoring monitor report 2 with invalid CRC");
           } else if (!recv.validRc()) {
@@ -739,25 +807,27 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         if (msg_can->dlc == sizeof(MsgMonitorReport3)) {
           auto &recv = msg_monitor_rpt_3_;
           if (recv.receive(*(MsgMonitorReport3*)msg_can->data.data(), stamp)) {
-            const auto &msg = recv.msg();
-            constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
-            if (msg.fault_thrtl_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Accelerator pedal output measurement mismatch with OEM"); }
-            if (msg.fault_thrtl_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Accelerator pedal input measurement mismatch with OEM"); }
-            if (msg.fault_thrtl_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle parameter mismatch with DBW"); }
-            if (msg.fault_thrtl_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle limit calculation mismatch with DBW"); }
-            if (msg.fault_thrtl_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle override calculation mismatch with DBW"); }
-            if (msg.fault_thrtl_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command mismatch with OEM and DBW"); }
-            if (msg.fault_thrtl_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle command generated by ULC command without matching ULC command"); }
-            if (msg.fault_thrtl_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command without matching command enable"); }
-            if (msg.fault_thrtl_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command with system disabled"); }
-            if (msg.fault_thrtl_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command with override"); }
-            if (msg.fault_gear_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Transmission gear measurement mismatch with OEM"); }
-            if (msg.fault_gear_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear input selection measurement mismatch with OEM"); }
-            if (msg.fault_gear_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear parameter mismatch with DBW"); }
-            if (msg.fault_gear_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear override calculation mismatch with DBW"); }
-            if (msg.fault_gear_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear actuator command mismatch with OEM and DBW"); }
-            if (msg.fault_gear_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear command generated by ULC command without matching ULC command"); }
-            if (msg.fault_system_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: System parameter mismatch with DBW"); }
+            if (monitor_prints_) {
+              const auto &msg = recv.msg();
+              constexpr MsgMonitorReport1::Fault MonitorFault = MsgMonitorReport1::Fault::Fault;
+              if (msg.fault_thrtl_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Accelerator pedal output measurement mismatch with OEM"); }
+              if (msg.fault_thrtl_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Accelerator pedal input measurement mismatch with OEM"); }
+              if (msg.fault_thrtl_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle parameter mismatch with DBW"); }
+              if (msg.fault_thrtl_limit == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle limit calculation mismatch with DBW"); }
+              if (msg.fault_thrtl_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle override calculation mismatch with DBW"); }
+              if (msg.fault_thrtl_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command mismatch with OEM and DBW"); }
+              if (msg.fault_thrtl_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle command generated by ULC command without matching ULC command"); }
+              if (msg.fault_thrtl_cmd_en == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command without matching command enable"); }
+              if (msg.fault_thrtl_cmd_sys == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command with system disabled"); }
+              if (msg.fault_thrtl_cmd_ovr == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Throttle actuator command with override"); }
+              if (msg.fault_gear_feedback == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Transmission gear measurement mismatch with OEM"); }
+              if (msg.fault_gear_input == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear input selection measurement mismatch with OEM"); }
+              if (msg.fault_gear_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear parameter mismatch with DBW"); }
+              if (msg.fault_gear_override == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear override calculation mismatch with DBW"); }
+              if (msg.fault_gear_cmd == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear actuator command mismatch with OEM and DBW"); }
+              if (msg.fault_gear_cmd_ulc == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: Gear command generated by ULC command without matching ULC command"); }
+              if (msg.fault_system_param == MonitorFault) { RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Monitor fault: System parameter mismatch with DBW"); }
+            }
           } else if (!recv.validCrc()) {
             RCLCPP_WARN(get_logger(), "Ignoring monitor report 3 with invalid CRC");
           } else if (!recv.validRc()) {
@@ -852,13 +922,24 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
                 }
               }
               if (msg.btn_enable) {
-                // Queue clear for steer/brake/throttle
-                msg_steer_cmd_clear_ = true;
-                msg_brake_cmd_clear_ = true;
-                msg_thrtl_cmd_clear_ = true;
-                msg_ulc_cmd_clear_ = true;
+                // Queue clear for steer/brake/throttle, followed by system enable
+                msg_steer_cmd_clear_ = msg_steer_rpt_1_.valid(stamp) && msg_steer_rpt_1_.msg().override_latched;
+                msg_brake_cmd_clear_ = msg_brake_rpt_1_.valid(stamp) && msg_brake_rpt_1_.msg().override_latched;
+                msg_thrtl_cmd_clear_ = msg_thrtl_rpt_1_.valid(stamp) && msg_thrtl_rpt_1_.msg().override_latched;
+                msg_ulc_cmd_clear_ = msg_ulc_rpt_.valid(stamp) && msg_ulc_rpt_.msg().override_latched;
+                if (buttons_) {
+                  msg_system_cmd_enable_ = true;
+                }
+              } else if (msg.btn_disable) {
+                if (buttons_) {
+                  // Request system disable
+                  msg_system_cmd_.cmd = MsgSystemCmd::Cmd::Disable;
+                  msg_system_cmd_.rc++;
+                  msg_system_cmd_.setCrc();
+                  publishCAN(msg_system_cmd_);
+                }
               }
-            } else {
+            } else if (buttons_) {
               if (msg.btn_enable) {
                 enableSystem();
               } else if (msg.btn_disable) {
@@ -2940,6 +3021,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
                 date.push_back(msg.ldate1.date7);
                 date.push_back(msg.ldate1.date8);
                 date.push_back(msg.ldate1.date9);
+                trim0(date);
                 ecu_info.license_date = date;
                 if (ecu_info_.ldate[module] != date) {
                   ecu_info_.ldate[module] = date;
@@ -2961,13 +3043,10 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             case Mux::BuildDate1: {
               std::string &date = ecu_info_.bdate_recv[module];
               if (date.size() == 7) {
-                date.push_back(msg.bdate0.date0);
-                date.push_back(msg.bdate0.date1);
-                date.push_back(msg.bdate0.date2);
-                date.push_back(msg.bdate0.date3);
-                date.push_back(msg.bdate0.date4);
-                date.push_back(msg.bdate0.date5);
-                date.push_back(msg.bdate0.date6);
+                date.push_back(msg.bdate1.date7);
+                date.push_back(msg.bdate1.date8);
+                date.push_back(msg.bdate1.date9);
+                trim0(date);
                 ecu_info.build_date = date;
                 if (!ecu_info.name.empty()
                  && !ecu_info.app_version.empty()
@@ -3009,6 +3088,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
                 ecu_info_.vin_recv.push_back(msg.vin2.vin14);
                 ecu_info_.vin_recv.push_back(msg.vin2.vin15);
                 ecu_info_.vin_recv.push_back(msg.vin2.vin16);
+                trim0(ecu_info_.vin_recv);
                 if (ecu_info_.vin != ecu_info_.vin_recv) {
                   ecu_info_.vin = ecu_info_.vin_recv;
                   RCLCPP_INFO(get_logger(), "VIN: %s", ecu_info_.vin.c_str());
@@ -3302,8 +3382,7 @@ void DbwNode::recvSteeringCmd(const ds_dbw_msgs::msg::SteeringCmd::ConstSharedPt
   msg_steer_cmd_.rc++;
   msg_steer_cmd_.setCrc();
   msg_steer_cmd_clear_ = false;
-
-  pub_can_->publish(FrameFromDbw(msg_steer_cmd_));
+  publishCAN(msg_steer_cmd_);
 }
 
 void DbwNode::recvBrakeCmd(const ds_dbw_msgs::msg::BrakeCmd::ConstSharedPtr msg) {
@@ -3386,8 +3465,7 @@ void DbwNode::recvBrakeCmd(const ds_dbw_msgs::msg::BrakeCmd::ConstSharedPtr msg)
   msg_brake_cmd_.rc++;
   msg_brake_cmd_.setCrc();
   msg_brake_cmd_clear_ = false;
-
-  pub_can_->publish(FrameFromDbw(msg_brake_cmd_));
+  publishCAN(msg_brake_cmd_);
 }
 
 void DbwNode::recvThrottleCmd(const ds_dbw_msgs::msg::ThrottleCmd::ConstSharedPtr msg) {
@@ -3428,8 +3506,7 @@ void DbwNode::recvThrottleCmd(const ds_dbw_msgs::msg::ThrottleCmd::ConstSharedPt
   msg_thrtl_cmd_.rc++;
   msg_thrtl_cmd_.setCrc();
   msg_thrtl_cmd_clear_ = false;
-
-  pub_can_->publish(FrameFromDbw(msg_thrtl_cmd_));
+  publishCAN(msg_thrtl_cmd_);
 }
 
 void DbwNode::recvGearCmd(const ds_dbw_msgs::msg::GearCmd::ConstSharedPtr msg) {
@@ -3459,11 +3536,12 @@ void DbwNode::recvGearCmd(const ds_dbw_msgs::msg::GearCmd::ConstSharedPtr msg) {
       case ds_dbw_msgs::msg::Gear::SPORT:     msg_gear_cmd_.cmd = Gear::Sport;     break;
       case ds_dbw_msgs::msg::Gear::CALIBRATE: msg_gear_cmd_.cmd = Gear::Calibrate; break;
     }
+    msg_gear_cmd_.return_to_park = msg->return_to_park;
   } else if (msg->cmd.value == ds_dbw_msgs::msg::Gear::CALIBRATE) {
     msg_gear_cmd_.cmd = Gear::Calibrate;
   }
   msg_gear_cmd_.setCrc();
-  pub_can_->publish(FrameFromDbw(msg_gear_cmd_));
+  publishCAN(msg_gear_cmd_);
 }
 
 void DbwNode::recvTurnSignalCmd(const ds_dbw_msgs::msg::TurnSignalCmd::ConstSharedPtr msg) {
@@ -3481,8 +3559,7 @@ void DbwNode::recvTurnSignalCmd(const ds_dbw_msgs::msg::TurnSignalCmd::ConstShar
   }
   msg_turn_signal_cmd_.rc++;
   msg_turn_signal_cmd_.setCrc();
-
-  pub_can_->publish(FrameFromDbw(msg_turn_signal_cmd_));
+  publishCAN(msg_turn_signal_cmd_);
 }
 
 void DbwNode::recvDriveModeCmd(const ds_dbw_msgs::msg::DriveModeCmd::ConstSharedPtr msg) {
@@ -3551,8 +3628,7 @@ void DbwNode::recvDriveModeCmd(const ds_dbw_msgs::msg::DriveModeCmd::ConstShared
     }
   }
   msg_drive_mode_cmd_.setCrc();
-
-  pub_can_->publish(FrameFromDbw(msg_drive_mode_cmd_));
+  publishCAN(msg_drive_mode_cmd_);
 }
 
 void DbwNode::recvMiscCmd(const ds_dbw_msgs::msg::MiscCmd::ConstSharedPtr msg) {
@@ -3571,8 +3647,7 @@ void DbwNode::recvMiscCmd(const ds_dbw_msgs::msg::MiscCmd::ConstSharedPtr msg) {
     msg_misc_cmd_.door_cmd = MsgMiscCmd::DoorCmd::None; ///@TODO
   }
   msg_misc_cmd_.setCrc();
-
-  pub_can_->publish(FrameFromDbw(msg_misc_cmd_));
+  publishCAN(msg_misc_cmd_);
 }
 
 void DbwNode::recvGpioCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
@@ -3587,8 +3662,7 @@ void DbwNode::recvGpioCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
   msg_gpio_cmd_.ssr2_cmd = (MsgGpioCmd::SsrCmd)msg->ssr2_cmd;
   msg_gpio_cmd_.rc++;
   msg_gpio_cmd_.setCrc();
-
-  pub_can_->publish(FrameFromDbw(msg_gpio_cmd_));
+  publishCAN(msg_gpio_cmd_);
 }
 
 void DbwNode::recvUlcCmd(const ds_dbw_msgs::msg::UlcCmd::ConstSharedPtr msg) {
@@ -3645,7 +3719,7 @@ void DbwNode::recvUlcCmd(const ds_dbw_msgs::msg::UlcCmd::ConstSharedPtr msg) {
   msg_ulc_cmd_.rc++;
   msg_ulc_cmd_.setCrc();
   msg_ulc_cmd_clear_ = false;
-  pub_can_->publish(FrameFromDbw(msg_ulc_cmd_));
+  publishCAN(msg_ulc_cmd_);
 
   // Transmit config on change and repeat at slow rate
   bool timeout = timeoutMs(stamp, msg_ulc_cfg_stamp_, msg_ulc_cfg_.PERIOD_MS);
@@ -3661,7 +3735,7 @@ void DbwNode::recvUlcCmd(const ds_dbw_msgs::msg::UlcCmd::ConstSharedPtr msg) {
     msg_ulc_cfg_.rc++;
     msg_ulc_cfg_.setCrc();
     msg_ulc_cfg_stamp_ = stamp;
-    pub_can_->publish(FrameFromDbw(msg_ulc_cfg_));
+    publishCAN(msg_ulc_cfg_);
   }
 }
 
@@ -3683,7 +3757,7 @@ void DbwNode::recvMonitorCmd(const ds_dbw_msgs::msg::MonitorCmd::ConstSharedPtr 
       break;
   }
   msg_monitor_cmd_.setCrc();
-  pub_can_->publish(FrameFromDbw(msg_monitor_cmd_));
+  publishCAN(msg_monitor_cmd_);
 }
 
 void DbwNode::recvSteeringCalibrate(const std_msgs::msg::Empty::ConstSharedPtr) {
@@ -3702,7 +3776,7 @@ void DbwNode::recvSteeringCalibrate(const std_msgs::msg::Empty::ConstSharedPtr) 
   msg_steer_cmd_.setCmdAngleDeg(0);
   msg_steer_cmd_.rc++;
   msg_steer_cmd_.setCrc();
-  pub_can_->publish(FrameFromDbw(msg_steer_cmd_));
+  publishCAN(msg_steer_cmd_);
 }
 
 bool DbwNode::publishDbwEnabled(bool force) {
@@ -3740,31 +3814,33 @@ void DbwNode::timerCallback() {
         msg_steer_cmd_.clear = true;
         msg_steer_cmd_.rc++;
         msg_steer_cmd_.setCrc();
-        pub_can_->publish(FrameFromDbw(msg_steer_cmd_));
+        publishCAN(msg_steer_cmd_);
       }
       if (msg_brake_rpt_1_.valid(stamp) && msg_brake_rpt_1_.msg().override_latched) {
         msg_brake_cmd_.reset();
         msg_brake_cmd_.clear = true;
         msg_brake_cmd_.rc++;
         msg_brake_cmd_.setCrc();
-        pub_can_->publish(FrameFromDbw(msg_brake_cmd_));
+        publishCAN(msg_brake_cmd_);
       }
       if (msg_thrtl_rpt_1_.valid(stamp) && msg_thrtl_rpt_1_.msg().override_latched) {
         msg_thrtl_cmd_.reset();
         msg_thrtl_cmd_.clear = true;
         msg_thrtl_cmd_.rc++;
         msg_thrtl_cmd_.setCrc();
-        pub_can_->publish(FrameFromDbw(msg_thrtl_cmd_));
+        publishCAN(msg_thrtl_cmd_);
       }
     }
   } else {
-    // Request system enable
+    // Request system enable after requesting clearing of latched overrides
     if (msg_system_cmd_enable_) {
-      if (!msg_steer_cmd_clear_ && ((!msg_brake_cmd_clear_ && !msg_thrtl_cmd_clear_) || !msg_ulc_cmd_clear_)) {
+      if ((!msg_steer_cmd_clear_ || !msg_steer_rpt_1_.valid(stamp) || msg_steer_rpt_1_.msg().timeout)
+       && (!msg_brake_cmd_clear_ || !msg_brake_rpt_1_.valid(stamp) || msg_brake_rpt_1_.msg().timeout || !msg_ulc_cmd_clear_)
+       && (!msg_thrtl_cmd_clear_ || !msg_thrtl_rpt_1_.valid(stamp) || msg_thrtl_rpt_1_.msg().timeout || !msg_ulc_cmd_clear_)) {
         msg_system_cmd_.cmd = MsgSystemCmd::Cmd::Enable;
         msg_system_cmd_.rc++;
         msg_system_cmd_.setCrc();
-        pub_can_->publish(FrameFromDbw(msg_system_cmd_));
+        publishCAN(msg_system_cmd_);
       }
     }
     msg_system_cmd_enable_ = false;
