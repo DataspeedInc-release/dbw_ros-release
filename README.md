@@ -2,28 +2,28 @@
 ROS2 interface to Dataspeed drive-by-wire platforms
 
 Launch the drive-by-wire and the demo
-```
+```bash
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true
 ```
 
 Launch the drive-by-wire and the demo and only send brake commands
-```
+```bash
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true steer:=false brake:=true thrtl:=false shift:=false misc:=false
 ```
 
 Launch the drive-by-wire and the demo and specify all steer options
-```
+```bash
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true steer_cmd_type:=angle steer_max:=500.0 steer_rate:=0.0 steer_accel:=0.0
 ```
 
 Launch the drive-by-wire and the demo and specify all brake options
-```
+```bash
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true brake_cmd_type:=pressure brake_min:=0.0 brake_max:=80.0 brake_inc:=0.0 brake_dec:=0.0
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true brake_cmd_type:=accel brake_min:=0.1 brake_max:=-8.0 brake_inc:=0.0 brake_dec:=0.0
 ```
 
 Launch the drive-by-wire and the demo and specify all throttle options
-```
+```bash
 ros2 launch ds_dbw_joystick_demo joystick_demo.launch.xml sys:=true thrtl_cmd_type:=percent thrtl_min:=0.0 thrtl_max:=100.0 thrtl_inc:=0.0 thrtl_dec:=0.0
 ```
 
@@ -50,6 +50,9 @@ See [joystick_demo.launch.xml](launch/joystick_demo.launch.xml) for a complete l
 * `thrtl_dec` Throttle command rate limit for decrease in %/s. Negative for unlimited. Default `0.0` (firmware selects default value)
 * `shift` Send gear shift commands. Default `true`
 * `misc` Send misc commands (turn-signal and others). Default `true`
+* `ignore` Set ignore flag in steer/brake/thrtl command messages. Default `false`
+* `enable` Enable/disable DBW with game controller left/right bumper buttons. Default `true`
+* `buttons` Enable/disable DBW with system enable/disable buttons. Default `true`
 
 # Controls
 
