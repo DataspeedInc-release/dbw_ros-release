@@ -2,6 +2,21 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.9 (2025-10-24)
+------------------
+* Add gear command return-to-park flag
+* Contributors: Gabe
+
+2.3.8 (2025-09-17)
+------------------
+* Add SystemSyncMode Partial/PartialWithBtn
+* Contributors: Kevin Hallenbeck
+
+2.3.7 (2025-08-21)
+------------------
+* Add hardware disable status
+* Contributors: Kevin Hallenbeck
+
 2.3.6 (2025-08-18)
 ------------------
 * Add ThrottleOffset message
