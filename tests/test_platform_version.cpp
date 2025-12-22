@@ -98,7 +98,9 @@ TEST(PlatformVersion, platformToString) {
   EXPECT_STREQ("POLARIS_RANGERXP", platformToString(Platform::POLARIS_RANGERXP));
   EXPECT_STREQ("POLARIS_RZRR",     platformToString(Platform::POLARIS_RZRR));
   EXPECT_STREQ("POLARIS_RANGERXD", platformToString(Platform::POLARIS_RANGERXD));
-  for (size_t i = 0x90; i <= UINT8_MAX; i++) {
+  EXPECT_STREQ("POLARIS_MRZRA",    platformToString(Platform::POLARIS_MRZRA));
+  EXPECT_STREQ("WAEV_GEM",         platformToString(Platform::WAEV_GEM));
+  for (size_t i = 0xB0; i <= UINT8_MAX; i++) {
     EXPECT_STREQ("UNKNOWN", platformToString((Platform)i)) << "i = " << i;
   }
 }
