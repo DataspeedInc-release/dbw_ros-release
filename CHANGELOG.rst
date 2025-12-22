@@ -2,6 +2,9 @@
 Changelog for package ds_dbw_joystick_demo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.10 (2025-12-18)
+-------------------
+
 2.3.9 (2025-10-24)
 ------------------
 * Add option to send/receive CAN messages with socketCAN instead of ROS topics
