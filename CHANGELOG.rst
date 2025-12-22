@@ -2,6 +2,11 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.10 (2025-12-18)
+-------------------
+* Add diagnostic for external brake mismatch between redundant inputs
+* Contributors: Kevin Hallenbeck
+
 2.3.9 (2025-10-24)
 ------------------
 * Add gear command return-to-park flag
