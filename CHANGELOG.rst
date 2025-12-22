@@ -2,6 +2,16 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.10 (2025-12-18)
+-------------------
+* Bump firmware versions to match 2025/12/18 release package
+* Split GPIO cmd/report messages into gateway/shift/misc
+* Add DriverDoor ReasonNotReady
+* Add diagnostic for external brake mismatch between redundant inputs
+* Add Polaris MRZR Alpha platform
+* Add Waev GEM platform
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck
+
 2.3.9 (2025-10-24)
 ------------------
 * Bump firmware versions to match 2025/10/24 release package

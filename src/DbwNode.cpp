@@ -105,53 +105,58 @@ static can_frame SocketCanFrameFromDbw(const T& msg) {
 
 // Latest firmware versions
 static const PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,3))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,3))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,3))},
-  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,3))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,3))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,3))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,3))},
-  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,3))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,3))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,3))},
-  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,3))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_GE1,          Module::ThrtlMon, ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,3))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,3))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,3))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,3))},
-  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,3))},
-  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,3))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Gateway,  ModuleVersion(0,1,0))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Steer,    ModuleVersion(0,1,0))},
-  {PlatformVersion(Platform::GM_ISV,            Module::Throttle, ModuleVersion(0,1,0))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,3))},
-  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,3))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Gateway,  ModuleVersion(2,1,4))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Brake,    ModuleVersion(2,1,4))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Throttle, ModuleVersion(2,1,4))},
+  {PlatformVersion(Platform::FCA_RU,            Module::Shift,    ModuleVersion(2,1,4))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Gateway,  ModuleVersion(3,4,4))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Brake,    ModuleVersion(3,4,4))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Throttle, ModuleVersion(3,4,4))},
+  {PlatformVersion(Platform::FORD_CD4,          Module::Shift,    ModuleVersion(3,4,4))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Gateway,  ModuleVersion(2,2,4))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::Throttle, ModuleVersion(2,2,4))},
+  {PlatformVersion(Platform::FORD_CD5,          Module::BOO,      ModuleVersion(2,2,4))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Gateway,  ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Throttle, ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Shift,    ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::Monitor,  ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_GE1,          Module::ThrtlMon, ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Gateway,  ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Throttle, ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::Shift,    ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_NGDV,         Module::BOO,      ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Gateway,  ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Throttle, ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_P702,         Module::Shift,    ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Gateway,  ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Throttle, ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_P702R,        Module::Shift,    ModuleVersion(1,1,4))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Gateway,  ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Brake,    ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Throttle, ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_U6,           Module::Shift,    ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_U6,           Module::BOO,      ModuleVersion(2,4,4))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Gateway,  ModuleVersion(1,2,4))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Throttle, ModuleVersion(1,2,4))},
+  {PlatformVersion(Platform::FORD_V3,           Module::Shift,    ModuleVersion(1,2,4))},
+  {PlatformVersion(Platform::FORD_V3,           Module::BOO,      ModuleVersion(1,2,4))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Gateway,  ModuleVersion(0,1,1))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Steer,    ModuleVersion(0,1,1))},
+  {PlatformVersion(Platform::GM_ISV,            Module::Throttle, ModuleVersion(0,1,1))},
+  {PlatformVersion(Platform::POLARIS_MRZRA,     Module::Gateway,  ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::POLARIS_MRZRA,     Module::Misc,     ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::POLARIS_MRZRA,     Module::Throttle, ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Gateway,  ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RANGERXD,  Module::Throttle, ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Gateway,  ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RANGERXP,  Module::Throttle, ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Gateway,  ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Steer,    ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RZRR,      Module::Throttle, ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Gateway,  ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::POLARIS_RZRXP,     Module::Throttle, ModuleVersion(1,4,4))},
+  {PlatformVersion(Platform::WAEV_GEM,          Module::Gateway,  ModuleVersion(0,1,0))},
+  {PlatformVersion(Platform::WAEV_GEM,          Module::Throttle, ModuleVersion(0,1,0))},
 });
 
 using std::placeholders::_1;
@@ -213,7 +218,9 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   pub_wheel_positions_ = create_publisher<ds_dbw_msgs::msg::WheelPositions>("wheel_positions", 2);
   pub_turn_signal_ = create_publisher<ds_dbw_msgs::msg::TurnSignalReport>("turn_signal/report", 2);
   pub_misc_ = create_publisher<ds_dbw_msgs::msg::MiscReport>("misc/report", 2);
-  pub_gpio_ = create_publisher<ds_dbw_msgs::msg::GpioReport>("gpio/report", 2);
+  pub_gpio_gateway_ = create_publisher<ds_dbw_msgs::msg::GpioReport>("gpio/gateway/report", 2);
+  pub_gpio_shift_ = create_publisher<ds_dbw_msgs::msg::GpioReport>("gpio/shift/report", 2);
+  pub_gpio_misc_ = create_publisher<ds_dbw_msgs::msg::GpioReport>("gpio/misc/report", 2);
   pub_drive_mode_ = create_publisher<ds_dbw_msgs::msg::DriveModeReport>("drive_mode/report", 2);
   pub_driver_assist_ = create_publisher<ds_dbw_msgs::msg::DriverAssist>("driver_assist", 2);
   pub_battery_ = create_publisher<ds_dbw_msgs::msg::Battery>("battery", 2);
@@ -246,7 +253,9 @@ DbwNode::DbwNode(const rclcpp::NodeOptions &options)
   sub_turn_signal_ = create_subscription<ds_dbw_msgs::msg::TurnSignalCmd>("turn_signal/cmd", 1, std::bind(&DbwNode::recvTurnSignalCmd, this, _1));
   sub_drive_mode_ = create_subscription<ds_dbw_msgs::msg::DriveModeCmd>("drive_mode/cmd", 1, std::bind(&DbwNode::recvDriveModeCmd, this, _1));
   sub_misc_ = create_subscription<ds_dbw_msgs::msg::MiscCmd>("misc/cmd", 1, std::bind(&DbwNode::recvMiscCmd, this, _1));
-  sub_gpio_ = create_subscription<ds_dbw_msgs::msg::GpioCmd>("gpio/cmd", 1, std::bind(&DbwNode::recvGpioCmd, this, _1));
+  sub_gpio_gateway_ = create_subscription<ds_dbw_msgs::msg::GpioCmd>("gpio/gateway/cmd", 1, std::bind(&DbwNode::recvGpioGatewayCmd, this, _1));
+  sub_gpio_shift_ = create_subscription<ds_dbw_msgs::msg::GpioCmd>("gpio/shift/cmd", 1, std::bind(&DbwNode::recvGpioShiftCmd, this, _1));
+  sub_gpio_misc_ = create_subscription<ds_dbw_msgs::msg::GpioCmd>("gpio/misc/cmd", 1, std::bind(&DbwNode::recvGpioMiscCmd, this, _1));
   sub_ulc_ = create_subscription<ds_dbw_msgs::msg::UlcCmd>("ulc/cmd", 1, std::bind(&DbwNode::recvUlcCmd, this, _1));
   sub_monitor_cmd_ = create_subscription<ds_dbw_msgs::msg::MonitorCmd>("monitor/cmd", 1, std::bind(&DbwNode::recvMonitorCmd, this, _1));
   sub_calibrate_steering_ = create_subscription<std_msgs::msg::Empty>("steering/calibrate", 1, std::bind(&DbwNode::recvSteeringCalibrate, this, _1));
@@ -1426,10 +1435,10 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
         }
         break;
 
-      case MsgGpioReport::ID:
-        if (msg_can->dlc == sizeof(MsgGpioReport)) {
-          auto &recv = msg_gpio_rpt_;
-          if (recv.receive(*(MsgGpioReport*)msg_can->data.data(), stamp)) {
+      case MsgGpioGatewayReport::ID:
+        if (msg_can->dlc == sizeof(MsgGpioGatewayReport)) {
+          auto &recv = msg_gpio_gateway_rpt_;
+          if (recv.receive(*(MsgGpioGatewayReport*)msg_can->data.data(), stamp)) {
             const auto &msg = recv.msg();
             static_assert(ds_dbw_msgs::msg::GpioReport::CMD_PASSIVE == (uint8_t)MsgGpioReport::GpioCmd::Passive);
             static_assert(ds_dbw_msgs::msg::GpioReport::CMD_LOW     == (uint8_t)MsgGpioReport::GpioCmd::Low);
@@ -1465,14 +1474,114 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             out.timeout = msg.timeout;
             out.bad_crc = msg.bad_crc;
             out.bad_rc = msg.bad_rc;
-            pub_gpio_->publish(out);
+            pub_gpio_gateway_->publish(out);
           } else if (!recv.validCrc()) {
-            RCLCPP_WARN(get_logger(), "Ignoring GPIO report with invalid CRC");
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO gateway report with invalid CRC");
           } else if (!recv.validRc()) {
-            RCLCPP_WARN(get_logger(), "Ignoring GPIO report with repeated rolling counter value");
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO gateway report with repeated rolling counter value");
           }
         } else {
-          RCLCPP_WARN(get_logger(), "Ignoring GPIO report with invalid size of %u", msg_can->dlc);
+          RCLCPP_WARN(get_logger(), "Ignoring GPIO gateway report with invalid size of %u", msg_can->dlc);
+        }
+        break;
+      
+      case MsgGpioShiftReport::ID:
+        if (msg_can->dlc == sizeof(MsgGpioShiftReport)) {
+          auto &recv = msg_gpio_shift_rpt_;
+          if (recv.receive(*(MsgGpioShiftReport*)msg_can->data.data(), stamp)) {
+            const auto &msg = recv.msg();
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_PASSIVE == (uint8_t)MsgGpioReport::GpioCmd::Passive);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_LOW     == (uint8_t)MsgGpioReport::GpioCmd::Low);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_PASSIVE == (uint8_t)MsgGpioReport::SsrCmd::Passive);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_ACTIVE  == (uint8_t)MsgGpioReport::SsrCmd::Active);
+            static_assert(ds_dbw_msgs::msg::GpioReport::GPIO_LOW  == (uint8_t)MsgGpioReport::GpioStatus::Low);
+            static_assert(ds_dbw_msgs::msg::GpioReport::GPIO_HIGH == (uint8_t)MsgGpioReport::GpioStatus::High);
+
+            ds_dbw_msgs::msg::GpioReport out;
+            out.header.stamp = msg_can->header.stamp;
+            out.gpio1_cmd = (uint8_t)msg.gpio1_cmd;
+            out.gpio2_cmd = (uint8_t)msg.gpio2_cmd;
+            out.gpio3_cmd = (uint8_t)msg.gpio3_cmd;
+            out.gpio4_cmd = (uint8_t)msg.gpio4_cmd;
+            out.gpio5_cmd = (uint8_t)msg.gpio5_cmd;
+            out.gpio6_cmd = (uint8_t)msg.gpio6_cmd;
+            out.ssr1_cmd = (uint8_t)msg.ssr1_cmd;
+            out.ssr2_cmd = (uint8_t)msg.ssr2_cmd;
+            out.gpio1_status = (uint8_t)msg.gpio1_status;
+            out.gpio2_status = (uint8_t)msg.gpio2_status;
+            out.gpio3_status = (uint8_t)msg.gpio3_status;
+            out.gpio4_status = (uint8_t)msg.gpio4_status;
+            out.gpio5_status = (uint8_t)msg.gpio5_status;
+            out.gpio6_status = (uint8_t)msg.gpio6_status;
+            out.gpio1_cmd_supported = msg.gpio1_cmd_supported;
+            out.gpio2_cmd_supported = msg.gpio2_cmd_supported;
+            out.gpio3_cmd_supported = msg.gpio3_cmd_supported;
+            out.gpio4_cmd_supported = msg.gpio4_cmd_supported;
+            out.gpio5_cmd_supported = msg.gpio5_cmd_supported;
+            out.gpio6_cmd_supported = msg.gpio6_cmd_supported;
+            out.ssr1_cmd_supported = msg.ssr1_cmd_supported;
+            out.ssr2_cmd_supported = msg.ssr2_cmd_supported;
+            out.timeout = msg.timeout;
+            out.bad_crc = msg.bad_crc;
+            out.bad_rc = msg.bad_rc;
+            pub_gpio_shift_->publish(out);
+          } else if (!recv.validCrc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO shift report with invalid CRC");
+          } else if (!recv.validRc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO shift report with repeated rolling counter value");
+          }
+        } else {
+          RCLCPP_WARN(get_logger(), "Ignoring GPIO shift report with invalid size of %u", msg_can->dlc);
+        }
+        break;
+      
+      case MsgGpioMiscReport::ID:
+        if (msg_can->dlc == sizeof(MsgGpioMiscReport)) {
+          auto &recv = msg_gpio_misc_rpt_;
+          if (recv.receive(*(MsgGpioMiscReport*)msg_can->data.data(), stamp)) {
+            const auto &msg = recv.msg();
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_PASSIVE == (uint8_t)MsgGpioReport::GpioCmd::Passive);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_LOW     == (uint8_t)MsgGpioReport::GpioCmd::Low);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_PASSIVE == (uint8_t)MsgGpioReport::SsrCmd::Passive);
+            static_assert(ds_dbw_msgs::msg::GpioReport::CMD_ACTIVE  == (uint8_t)MsgGpioReport::SsrCmd::Active);
+            static_assert(ds_dbw_msgs::msg::GpioReport::GPIO_LOW  == (uint8_t)MsgGpioReport::GpioStatus::Low);
+            static_assert(ds_dbw_msgs::msg::GpioReport::GPIO_HIGH == (uint8_t)MsgGpioReport::GpioStatus::High);
+
+            ds_dbw_msgs::msg::GpioReport out;
+            out.header.stamp = msg_can->header.stamp;
+            out.gpio1_cmd = (uint8_t)msg.gpio1_cmd;
+            out.gpio2_cmd = (uint8_t)msg.gpio2_cmd;
+            out.gpio3_cmd = (uint8_t)msg.gpio3_cmd;
+            out.gpio4_cmd = (uint8_t)msg.gpio4_cmd;
+            out.gpio5_cmd = (uint8_t)msg.gpio5_cmd;
+            out.gpio6_cmd = (uint8_t)msg.gpio6_cmd;
+            out.ssr1_cmd = (uint8_t)msg.ssr1_cmd;
+            out.ssr2_cmd = (uint8_t)msg.ssr2_cmd;
+            out.gpio1_status = (uint8_t)msg.gpio1_status;
+            out.gpio2_status = (uint8_t)msg.gpio2_status;
+            out.gpio3_status = (uint8_t)msg.gpio3_status;
+            out.gpio4_status = (uint8_t)msg.gpio4_status;
+            out.gpio5_status = (uint8_t)msg.gpio5_status;
+            out.gpio6_status = (uint8_t)msg.gpio6_status;
+            out.gpio1_cmd_supported = msg.gpio1_cmd_supported;
+            out.gpio2_cmd_supported = msg.gpio2_cmd_supported;
+            out.gpio3_cmd_supported = msg.gpio3_cmd_supported;
+            out.gpio4_cmd_supported = msg.gpio4_cmd_supported;
+            out.gpio5_cmd_supported = msg.gpio5_cmd_supported;
+            out.gpio6_cmd_supported = msg.gpio6_cmd_supported;
+            out.ssr1_cmd_supported = msg.ssr1_cmd_supported;
+            out.ssr2_cmd_supported = msg.ssr2_cmd_supported;
+            out.timeout = msg.timeout;
+            out.bad_crc = msg.bad_crc;
+            out.bad_rc = msg.bad_rc;
+            pub_gpio_misc_->publish(out);
+          } else if (!recv.validCrc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO misc report with invalid CRC");
+          } else if (!recv.validRc()) {
+            RCLCPP_WARN(get_logger(), "Ignoring GPIO misc report with repeated rolling counter value");
+          }
+        } else {
+          RCLCPP_WARN(get_logger(), "Ignoring GPIO misc report with invalid size of %u", msg_can->dlc);
         }
         break;
 
@@ -1863,6 +1972,7 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
               out.degraded_bped_feedback = msg3.degraded_bped_feedback;
               out.degraded_btsi_stuck_low = msg3.degraded_btsi_stuck_low;
               out.degraded_btsi_stuck_high = msg3.degraded_btsi_stuck_high;
+              out.degraded_external_input_mismatch = msg3.degraded_external_input_mismatch;
               out.degraded_hold_duration = msg3.degraded_hold_duration;
               out.degraded_actuator_aeb_deny = msg3.degraded_actuator_aeb_deny;
               out.degraded_actuator_1 = msg3.degraded_actuator_1;
@@ -2371,6 +2481,9 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
             }
             if (msg.degraded_btsi_stuck_high) {
               RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Brake degraded: BTSI stuck high");
+            }
+            if (msg.degraded_external_input_mismatch) {
+              RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Brake degraded: External brake input dual channel mismatch");
             }
             if (msg.degraded_hold_duration) {
               RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 10e3, "Brake degraded: Brake hold duration exceeded");
@@ -2886,6 +2999,8 @@ void DbwNode::recvCAN(const can_msgs::msg::Frame::ConstSharedPtr msg_can) {
       case MsgEcuInfoBOO::ID:
       case MsgEcuInfoMonitor::ID:
       case MsgEcuInfoThrtlMon::ID:
+      case MsgEcuInfoSteerMon::ID:
+      case MsgEcuInfoMisc::ID:
         if (msg_can->dlc == sizeof(MsgEcuInfo)) {
           using Mux = MsgEcuInfo::Mux;
           auto &ecu_info = ecu_info_.msg[msg_can->id];
@@ -3650,19 +3765,49 @@ void DbwNode::recvMiscCmd(const ds_dbw_msgs::msg::MiscCmd::ConstSharedPtr msg) {
   publishCAN(msg_misc_cmd_);
 }
 
-void DbwNode::recvGpioCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
-  msg_gpio_cmd_.reset();
-  msg_gpio_cmd_.gpio1_cmd = (MsgGpioCmd::GpioCmd)msg->gpio1_cmd;
-  msg_gpio_cmd_.gpio2_cmd = (MsgGpioCmd::GpioCmd)msg->gpio2_cmd;
-  msg_gpio_cmd_.gpio3_cmd = (MsgGpioCmd::GpioCmd)msg->gpio3_cmd;
-  msg_gpio_cmd_.gpio4_cmd = (MsgGpioCmd::GpioCmd)msg->gpio4_cmd;
-  msg_gpio_cmd_.gpio5_cmd = (MsgGpioCmd::GpioCmd)msg->gpio5_cmd;
-  msg_gpio_cmd_.gpio6_cmd = (MsgGpioCmd::GpioCmd)msg->gpio6_cmd;
-  msg_gpio_cmd_.ssr1_cmd = (MsgGpioCmd::SsrCmd)msg->ssr1_cmd;
-  msg_gpio_cmd_.ssr2_cmd = (MsgGpioCmd::SsrCmd)msg->ssr2_cmd;
-  msg_gpio_cmd_.rc++;
-  msg_gpio_cmd_.setCrc();
-  publishCAN(msg_gpio_cmd_);
+void DbwNode::recvGpioGatewayCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
+  msg_gpio_gateway_cmd_.reset();
+  msg_gpio_gateway_cmd_.gpio1_cmd = (MsgGpioCmd::GpioCmd)msg->gpio1_cmd;
+  msg_gpio_gateway_cmd_.gpio2_cmd = (MsgGpioCmd::GpioCmd)msg->gpio2_cmd;
+  msg_gpio_gateway_cmd_.gpio3_cmd = (MsgGpioCmd::GpioCmd)msg->gpio3_cmd;
+  msg_gpio_gateway_cmd_.gpio4_cmd = (MsgGpioCmd::GpioCmd)msg->gpio4_cmd;
+  msg_gpio_gateway_cmd_.gpio5_cmd = (MsgGpioCmd::GpioCmd)msg->gpio5_cmd;
+  msg_gpio_gateway_cmd_.gpio6_cmd = (MsgGpioCmd::GpioCmd)msg->gpio6_cmd;
+  msg_gpio_gateway_cmd_.ssr1_cmd = (MsgGpioCmd::SsrCmd)msg->ssr1_cmd;
+  msg_gpio_gateway_cmd_.ssr2_cmd = (MsgGpioCmd::SsrCmd)msg->ssr2_cmd;
+  msg_gpio_gateway_cmd_.rc++;
+  msg_gpio_gateway_cmd_.setCrc();
+  publishCAN(msg_gpio_gateway_cmd_);
+}
+
+void DbwNode::recvGpioShiftCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
+  msg_gpio_shift_cmd_.reset();
+  msg_gpio_shift_cmd_.gpio1_cmd = (MsgGpioCmd::GpioCmd)msg->gpio1_cmd;
+  msg_gpio_shift_cmd_.gpio2_cmd = (MsgGpioCmd::GpioCmd)msg->gpio2_cmd;
+  msg_gpio_shift_cmd_.gpio3_cmd = (MsgGpioCmd::GpioCmd)msg->gpio3_cmd;
+  msg_gpio_shift_cmd_.gpio4_cmd = (MsgGpioCmd::GpioCmd)msg->gpio4_cmd;
+  msg_gpio_shift_cmd_.gpio5_cmd = (MsgGpioCmd::GpioCmd)msg->gpio5_cmd;
+  msg_gpio_shift_cmd_.gpio6_cmd = (MsgGpioCmd::GpioCmd)msg->gpio6_cmd;
+  msg_gpio_shift_cmd_.ssr1_cmd = (MsgGpioCmd::SsrCmd)msg->ssr1_cmd;
+  msg_gpio_shift_cmd_.ssr2_cmd = (MsgGpioCmd::SsrCmd)msg->ssr2_cmd;
+  msg_gpio_shift_cmd_.rc++;
+  msg_gpio_shift_cmd_.setCrc();
+  publishCAN(msg_gpio_shift_cmd_);
+}
+
+void DbwNode::recvGpioMiscCmd(const ds_dbw_msgs::msg::GpioCmd::ConstSharedPtr msg) {
+  msg_gpio_misc_cmd_.reset();
+  msg_gpio_misc_cmd_.gpio1_cmd = (MsgGpioCmd::GpioCmd)msg->gpio1_cmd;
+  msg_gpio_misc_cmd_.gpio2_cmd = (MsgGpioCmd::GpioCmd)msg->gpio2_cmd;
+  msg_gpio_misc_cmd_.gpio3_cmd = (MsgGpioCmd::GpioCmd)msg->gpio3_cmd;
+  msg_gpio_misc_cmd_.gpio4_cmd = (MsgGpioCmd::GpioCmd)msg->gpio4_cmd;
+  msg_gpio_misc_cmd_.gpio5_cmd = (MsgGpioCmd::GpioCmd)msg->gpio5_cmd;
+  msg_gpio_misc_cmd_.gpio6_cmd = (MsgGpioCmd::GpioCmd)msg->gpio6_cmd;
+  msg_gpio_misc_cmd_.ssr1_cmd = (MsgGpioCmd::SsrCmd)msg->ssr1_cmd;
+  msg_gpio_misc_cmd_.ssr2_cmd = (MsgGpioCmd::SsrCmd)msg->ssr2_cmd;
+  msg_gpio_misc_cmd_.rc++;
+  msg_gpio_misc_cmd_.setCrc();
+  publishCAN(msg_gpio_misc_cmd_);
 }
 
 void DbwNode::recvUlcCmd(const ds_dbw_msgs::msg::UlcCmd::ConstSharedPtr msg) {

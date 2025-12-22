@@ -60,6 +60,8 @@ enum class Platform : uint8_t {
   POLARIS_RANGERXP = 0x82, // Polaris Ranger-XP
   POLARIS_RZRR     = 0x83, // Polaris RZR-R
   POLARIS_RANGERXD = 0x84, // Polaris Ranger-XD
+  POLARIS_MRZRA    = 0x85, // Polaris Polaris MRZR-Alpha
+  WAEV_GEM         = 0xA0, // Waev GEM
   MAX
 };
 
@@ -73,6 +75,8 @@ enum class Module : uint16_t {
   BOO = MsgEcuInfoBOO::ID,
   Monitor = MsgEcuInfoMonitor::ID,
   ThrtlMon = MsgEcuInfoThrtlMon::ID,
+  SteerMon = MsgEcuInfoSteerMon::ID,
+  Misc = MsgEcuInfoMisc::ID,
   MAX
 };
 
@@ -94,6 +98,8 @@ constexpr static const char* platformToString(Platform x) {
     case Platform::POLARIS_RANGERXP: return "POLARIS_RANGERXP";
     case Platform::POLARIS_RZRR:     return "POLARIS_RZRR";
     case Platform::POLARIS_RANGERXD: return "POLARIS_RANGERXD";
+    case Platform::POLARIS_MRZRA:    return "POLARIS_MRZRA";
+    case Platform::WAEV_GEM:         return "WAEV_GEM";
     default:                         return "UNKNOWN";
   }
 }
@@ -108,6 +114,8 @@ constexpr static const char* moduleToString(Module x) {
     case Module::BOO:      return "BOO     ";
     case Module::Monitor:  return "Monitor ";
     case Module::ThrtlMon: return "ThrtlMon";
+    case Module::SteerMon: return "SteerMon";
+    case Module::Misc:     return "Misc    ";
     default:               return "UNKNOWN";
   }
 }
