@@ -57,6 +57,7 @@
 #endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
+#define M_PI_DBW
 #endif
 #ifdef _MSVC_LANG
 #error MSVC does not support unaligned bitfield packing, which breaks most message structures by padding and increasing size
@@ -1357,7 +1358,8 @@ struct MsgBrakeReport3 {
     uint8_t degraded_control_performance :1;
     uint8_t degraded_param_mismatch :1;
     uint8_t degraded_comms_vehicle :1;
-    uint8_t :2;
+    uint8_t :1;
+    uint8_t degraded_external_input_mismatch :1;
     uint8_t degraded_hold_duration :1;
     uint8_t degraded_comms_actuator :1;
     uint8_t degraded_comms_actuator_1 :1;
@@ -2453,6 +2455,7 @@ struct MsgSystemReport {
         NotEnableCmdBrake      = 0xC1,
         NotEnableCmdThrtl      = 0xC2,
         DriverSeatBelt         = 0xE0,
+        DriverDoor             = 0xE1,
         SystemReengageDelay    = 0xF8,
         SystemLockout          = 0xFA,
         SystemDisabled         = 0xFE,
@@ -2545,6 +2548,7 @@ struct MsgSystemReport {
             case ReasonNotReady::NotEnableCmdBrake:      return "NotEnableCmdBrake";
             case ReasonNotReady::NotEnableCmdThrtl:      return "NotEnableCmdThrtl";
             case ReasonNotReady::DriverSeatBelt:         return "DriverSeatBelt";
+            case ReasonNotReady::DriverDoor:             return "DriverDoor";
             case ReasonNotReady::SystemReengageDelay:    return "SystemReengageDelay";
             case ReasonNotReady::SystemLockout:          return "SystemLockout";
             case ReasonNotReady::SystemDisabled:         return "SystemDisabled";
@@ -4415,7 +4419,6 @@ struct MsgDriveModeReport2 {
 static_assert(8 == sizeof(MsgDriveModeReport2));
 
 struct MsgGpioCmd {
-    static constexpr uint32_t ID = 0x2D0;
     static constexpr size_t TIMEOUT_MS = 200;
     enum class GpioCmd : uint8_t {
         Passive = 0,
@@ -4441,21 +4444,12 @@ struct MsgGpioCmd {
         memset(this, 0x00, sizeof(*this));
         rc = save;
     }
-    void setCrc() {
-        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
-        crc = crc8(ID, this, offsetof(typeof(*this), crc));
-    }
-    bool validCrc() const {
-        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
-        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
-    }
     bool validRc(uint8_t rc) const {
         return rc != this->rc;
     }
 };
 static_assert(3 == sizeof(MsgGpioCmd));
 struct MsgGpioReport {
-    static constexpr uint32_t ID = 0x2D1;
     static constexpr size_t PERIOD_MIN = 10;
     static constexpr size_t PERIOD_MAX = 100;
     static constexpr size_t TIMEOUT_MS = 250;
@@ -4508,6 +4502,13 @@ struct MsgGpioReport {
         // Check for changes and ignore CRC
         return memcmp(this, &previous, offsetof(typeof(*this), crc)) != 0;
     }
+    bool validRc(uint8_t rc) const {
+        return rc != this->rc;
+    }
+};
+static_assert(6 == sizeof(MsgGpioReport));
+struct MsgGpioGatewayCmd : public MsgGpioCmd {
+    static constexpr uint32_t ID = 0x2D0;
     void setCrc() {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
         crc = crc8(ID, this, offsetof(typeof(*this), crc));
@@ -4516,11 +4517,62 @@ struct MsgGpioReport {
         static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
         return crc == crc8(ID, this, offsetof(typeof(*this), crc));
     }
-    bool validRc(uint8_t rc) const {
-        return rc != this->rc;
+};
+struct MsgGpioGatewayReport : public MsgGpioReport {
+    static constexpr uint32_t ID = 0x2D1;
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
     }
 };
-static_assert(6 == sizeof(MsgGpioReport));
+struct MsgGpioShiftCmd : public MsgGpioCmd {
+    static constexpr uint32_t ID = 0x2D2;
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+};
+struct MsgGpioShiftReport : public MsgGpioReport {
+    static constexpr uint32_t ID = 0x2D3;
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+};
+struct MsgGpioMiscCmd : public MsgGpioCmd {
+    static constexpr uint32_t ID = 0x2D4;
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+};
+struct MsgGpioMiscReport : public MsgGpioReport {
+    static constexpr uint32_t ID = 0x2D5;
+    void setCrc() {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        crc = crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+    bool validCrc() const {
+        static_assert(crc8(ID, MSG_NULL, offsetof(typeof(*this), crc)) != 0x00);
+        return crc == crc8(ID, this, offsetof(typeof(*this), crc));
+    }
+};
 
 struct MsgRemoteReport {
     static constexpr uint32_t ID = 0x2D8;
@@ -5508,13 +5560,15 @@ struct MsgEcuInfoShift    : public MsgEcuInfo { static constexpr uint32_t ID = 0
 struct MsgEcuInfoBOO      : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C5; };
 struct MsgEcuInfoMonitor  : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C6; };
 struct MsgEcuInfoThrtlMon : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C7; };
+struct MsgEcuInfoSteerMon : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C8; };
+struct MsgEcuInfoMisc     : public MsgEcuInfo { static constexpr uint32_t ID = 0x6C9; };
 
 
 #pragma pack(pop) // Undo packing
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 83> IDS {
+static constexpr std::array<uint32_t, 89> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -5568,8 +5622,12 @@ static constexpr std::array<uint32_t, 83> IDS {
     MsgBattery::ID,
     MsgBatteryTraction::ID,
     MsgEyeTracker::ID,
-    MsgGpioCmd::ID,
-    MsgGpioReport::ID,
+    MsgGpioGatewayCmd::ID,
+    MsgGpioGatewayReport::ID,
+    MsgGpioShiftCmd::ID,
+    MsgGpioShiftReport::ID,
+    MsgGpioMiscCmd::ID,
+    MsgGpioMiscReport::ID,
     MsgRemoteReport::ID,
     MsgMiscReport3::ID,
     // Secondary reports
@@ -5610,6 +5668,8 @@ static constexpr std::array<uint32_t, 83> IDS {
     MsgEcuInfoBOO::ID,
     MsgEcuInfoMonitor::ID,
     MsgEcuInfoThrtlMon::ID,
+    MsgEcuInfoSteerMon::ID,
+    MsgEcuInfoMisc::ID,
 };
 template <typename T, size_t N>
 static constexpr bool _is_sorted_unique(const std::array<T, N> &arr) {
@@ -5627,3 +5687,8 @@ static_assert(_is_sorted_unique(IDS));
 #if defined(__STRICT_ANSI__) || defined(_MSVC_LANG)
 #undef typeof
 #endif
+#ifdef M_PI_DBW
+#undef M_PI_DBW
+#undef M_PI
+#endif
+
