@@ -117,6 +117,19 @@ enum class Gear : uint8_t {
     Sport = 7,
     Calibrate = 15,
 };
+enum class GearManual : uint8_t {
+    None = 0,
+    M01 = 1,
+    M02 = 2,
+    M03 = 3,
+    M04 = 4,
+    M05 = 5,
+    M06 = 6,
+    M07 = 7,
+    M08 = 8,
+    M09 = 9,
+    M10 = 10,
+};
 enum class TurnSignal : uint8_t {
     None = 0,
     Left = 1,
@@ -1208,6 +1221,12 @@ struct MsgBrakeReport2 {
         SecondsX2 = 1,
         MillisecondsX100 = 2,
     };
+    enum class BrkInfDur : uint8_t { // Brake infinite duration
+        Unsupported = 0,
+        UnlimitedWithPartialToggle = 1,
+        PrimaryOnlySecondaryRecharge = 2,
+        SecondaryOnlyPrimaryRecharge = 3,
+    };
     uint8_t degraded :1;
     uint8_t degraded_cmd_type :1;
     uint8_t degraded_comms :1;
@@ -1226,7 +1245,7 @@ struct MsgBrakeReport2 {
     uint8_t hardware_disable :1;
     uint8_t :8;
     uint16_t limit_value :10; // 0.1 %, 0.2 bar, 0.02 m/s^2, 1023=unlimited
-    uint8_t :2;
+    BrkInfDur brake_available_partial_inf :2;
     uint8_t comms_loss_armed :1;
     uint8_t req_park_brake :1;
     uint8_t req_shift_park :1;
@@ -1819,7 +1838,7 @@ static_assert(4 == sizeof(MsgThrtlParamHash));
 struct MsgGearCmd {
     static constexpr size_t TIMEOUT_MS = 0; // Event based
     Gear cmd :4;
-    uint8_t :4;
+    GearManual cmd_manual :4;
     uint8_t :8;
     uint8_t :3;
     uint8_t return_to_park :1;
@@ -1887,7 +1906,8 @@ struct MsgGearReport1 {
     Gear driver :4;
     Reject reject :3;
     uint8_t :1; // Future expansion of reject
-    uint8_t :8;
+    GearManual gear_manual :4;
+    GearManual cmd_manual :4;
     uint8_t :8;
     uint8_t :8;
     uint8_t power_latched :1;
@@ -1946,7 +1966,8 @@ struct MsgGearReport2 {
     uint8_t :8;
     uint8_t :8;
     uint8_t :8;
-    uint8_t :2;
+    uint8_t support_cmd_manual :1;
+    uint8_t ready_to_calibrate :1;
     uint8_t req_brake_cal :1;
     CmdSrc cmd_src :3;
     uint8_t rc :2;
@@ -3259,6 +3280,7 @@ struct MsgSteerOffset {
         Unknown = 0,
         Relative = 1,
         Absolute = 2,
+        Internal = 3,
     };
     int16_t angle :14; // 0.1 deg, raw + offset
     uint8_t :2;
@@ -3275,6 +3297,13 @@ struct MsgSteerOffset {
         angle_raw = INT16_MIN;
         angle_offset = INT16_MIN;
         rc = save;
+    }
+    void setAngleDegX10(int32_t deg) {
+        if ((INT16_MAX >> 2) >= deg && deg >= -(INT16_MAX >> 2)) {
+            angle = deg;
+        } else {
+            angle = INT16_MIN >> 2;
+        }
     }
     void setAngleDeg(float deg) {
         if (std::isfinite(deg)) {
@@ -4018,9 +4047,12 @@ struct MsgMiscCmd {
     };
     enum class DoorSelect : uint8_t {
         None = 0,
-        Left = 1,
-        Right = 2,
-        Trunk = 3,
+        Driver = 1,
+        Passenger = 2,
+        RearLeft = 3,
+        RearRight = 4,
+        Trunk = 14,
+        Hood = 15,
     };
     enum class DoorCmd : uint8_t {
         None = 0,
@@ -4029,9 +4061,9 @@ struct MsgMiscCmd {
     };
     uint8_t :2; // Previously turn_signal_cmd
     PrkBrkCmd parking_brake_cmd :2;
-    DoorSelect door_select :2;
-    DoorCmd door_cmd :2;
-    uint8_t :8;
+    uint8_t :4;
+    DoorSelect door_select :4;
+    DoorCmd door_cmd :4;
     uint8_t :8;
     uint8_t crc;
     void reset() {
@@ -4176,11 +4208,20 @@ struct MsgMiscReport2 {
     WiperFront wiper_front :4;
     uint8_t /*wiper_rear*/ :2;
     AmbientLight ambient_light :2;
-    uint8_t :8;
+    uint8_t lock_driver :1;
+    uint8_t lock_passenger :1;
+    uint8_t lock_rear_left :1;
+    uint8_t lock_rear_right :1;
+    uint8_t :4;
     uint8_t :8;
     uint8_t :8;
     uint8_t outside_air_temp; // -40 to 87 deg C
-    uint8_t :6;
+    uint8_t buckle_row2_driver :1;
+    uint8_t buckle_row2_middle :1;
+    uint8_t buckle_row2_pasngr :1;
+    uint8_t buckle_row3_driver :1;
+    uint8_t buckle_row3_middle :1;
+    uint8_t buckle_row3_pasngr :1;
     uint8_t rc :2;
     uint8_t crc;
     void reset() {
@@ -4999,6 +5040,12 @@ struct MsgReserved2 {
     uint8_t reserved[8];
 };
 static_assert(8 == sizeof(MsgReserved2));
+struct MsgReserved3 {
+    static constexpr uint32_t ID = 0x362;
+    static constexpr size_t TIMEOUT_MS = 2500;
+    uint8_t reserved[8];
+};
+static_assert(8 == sizeof(MsgReserved3));
 struct MsgReservedDebug {
     static constexpr uint32_t ID = 0x36F;
     static constexpr size_t TIMEOUT_MS = 1000;
@@ -5568,7 +5615,7 @@ struct MsgEcuInfoMisc     : public MsgEcuInfo { static constexpr uint32_t ID = 0
 
 
 // Verify that IDs are unique and in the desired order of priorities (unit test)
-static constexpr std::array<uint32_t, 89> IDS {
+static constexpr std::array<uint32_t, 90> IDS {
     // Primary reports
     MsgSteerReport1::ID,
     MsgBrakeReport1::ID,
@@ -5650,6 +5697,7 @@ static constexpr std::array<uint32_t, 89> IDS {
     // Reserved
     MsgReserved1::ID,
     MsgReserved2::ID,
+    MsgReserved3::ID,
     MsgReservedDebug::ID,
     // Other sensors
     MsgTirePressure::ID,
