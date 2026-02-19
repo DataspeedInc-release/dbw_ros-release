@@ -2,6 +2,11 @@
 Changelog for package ds_dbw
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.11 (2026-02-19)
+-------------------
+* Use curl instead of bash to download and run scripts
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck
+
 2.3.10 (2025-12-18)
 -------------------
 

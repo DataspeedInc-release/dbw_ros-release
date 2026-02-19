@@ -52,6 +52,7 @@ enum class Platform : uint8_t {
   FORD_V3          = 0x08, // Ford E-Transit
   FORD_P702R       = 0x09, // Ford F150 Raptor (2024+)
   FORD_NGDV        = 0x0A, // Ford/Oshkosh NGDV
+  FORD_P708        = 0x0C, // Ford Super Duty (F250-F600) (2023+)
   FCA_RU           = 0x10, // Chrysler Pacifica
   FCA_WK2          = 0x11, // Jeep Grand Cherokee
   GM_ISV           = 0x20, // General Motors Infantry Squad Vehicle
@@ -90,6 +91,7 @@ constexpr static const char* platformToString(Platform x) {
     case Platform::FORD_V3:          return "FORD_V3";
     case Platform::FORD_P702R:       return "FORD_P702R";
     case Platform::FORD_NGDV:        return "FORD_NGDV";
+    case Platform::FORD_P708:        return "FORD_P708";
     case Platform::FCA_RU:           return "FCA_RU";
     case Platform::FCA_WK2:          return "FCA_WK2";
     case Platform::GM_ISV:           return "GM_ISV";
