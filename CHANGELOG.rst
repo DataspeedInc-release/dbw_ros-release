@@ -2,6 +2,18 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.11 (2026-02-19)
+-------------------
+* Add internal steering offset enumeration
+* Add gear manual number control
+* Add door lock statuses to MiscReport
+* Add door/trunk open/close control to MiscCmd
+* Add support for larger positive ACC brake acceleration commands
+* Add 2nd and 3rd row seat-belt statuses
+* Add BrakeReport BrakeAvailablePartialInf signal
+* Add gear ready to calibrate status
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck
+
 2.3.10 (2025-12-18)
 -------------------
 * Add diagnostic for external brake mismatch between redundant inputs
