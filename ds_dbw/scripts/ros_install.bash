@@ -61,10 +61,10 @@ fi
 
 # Install SDK
 echo "Installing SDK..."
-bash <(wget -q -O - https://bitbucket.org/DataspeedInc/dbw_ros/raw/ros2/ds_dbw/scripts/sdk_install.bash)
+bash <(curl -s https://bitbucket.org/DataspeedInc/dbw_ros/raw/ros2/ds_dbw/scripts/sdk_install.bash)
 
 # Configure startup script
 mkdir -p $HOME/.config/autostart
-wget -q https://bitbucket.org/DataspeedInc/dbw_ros/raw/ros2/ds_dbw/scripts/joystick_demo.desktop -O $HOME/.config/autostart/joystick_demo.desktop
+curl -s https://bitbucket.org/DataspeedInc/dbw_ros/raw/ros2/ds_dbw/scripts/joystick_demo.desktop -o $HOME/.config/autostart/joystick_demo.desktop
 
 echo "ROS install: Done"

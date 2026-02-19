@@ -2,6 +2,21 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.11 (2026-02-19)
+-------------------
+* Bump firmware versions to match 2026/02/19 release package
+* Respawn CAN node on crash
+* Add internal steering offset enumeration
+* Add gear manual number control
+* Add door lock statuses to MiscReport
+* Add door/trunk open/close control to MiscCmd
+* Add support for hazard light control
+* Add 2nd and 3rd row seat-belt statuses
+* Add Ford P708 (2023+ F-250 to F-600)
+* Add BrakeReport BrakeAvailablePartialInf signal
+* Add gear ready to calibrate status
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck
+
 2.3.10 (2025-12-18)
 -------------------
 * Bump firmware versions to match 2025/12/18 release package
