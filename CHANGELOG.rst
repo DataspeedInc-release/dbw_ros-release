@@ -2,6 +2,11 @@
 Changelog for package ds_dbw_joystick_demo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.11 (2026-02-19)
+-------------------
+* Add support for larger positive ACC brake acceleration commands
+* Contributors: Kevin Hallenbeck
+
 2.3.10 (2025-12-18)
 -------------------
 
