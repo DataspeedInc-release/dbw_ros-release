@@ -10,6 +10,12 @@ bool passenger_airbag
 # Seat Belts
 bool buckle_driver
 bool buckle_passenger
+bool buckle_row2_driver
+bool buckle_row2_middle
+bool buckle_row2_passenger
+bool buckle_row3_driver
+bool buckle_row3_middle
+bool buckle_row3_passenger
 
 # Doors
 bool door_driver
@@ -18,6 +24,12 @@ bool door_rear_left
 bool door_rear_right
 bool door_hood
 bool door_trunk
+
+# Locks
+bool lock_driver
+bool lock_passenger
+bool lock_rear_left
+bool lock_rear_right
 
 # Buttons
 bool btn_ld_ok        # Left D-Pad OK

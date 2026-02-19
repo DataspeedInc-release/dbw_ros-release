@@ -44,6 +44,7 @@ bool hardware_disable
 float32 limit_value # percent, bar, or m/s^2
 
 # Brake available duration and actions
+BrakeInfDur brake_available_partial_inf
 float32 brake_available_duration
 bool brake_available_full
 bool req_shift_park
