@@ -10,7 +10,7 @@
   <arg name="socketcan_internal" default="false" />
   <arg name="socketcan_dev" default="can0" />
   <group if="$(var live)">
-    <node if="$(var dataspeed_can)" pkg="dataspeed_can_usb" exec="can_node" output="screen">
+    <node if="$(var dataspeed_can)" pkg="dataspeed_can_usb" exec="can_node" output="screen" respawn="true" respawn_delay="2.0">
       <remap from="can_bus_3/can_rx" to="$(var can_ns)/can_rx"/>
       <remap from="can_bus_3/can_tx" to="$(var can_ns)/can_tx"/>
       <remap from="can_bus_3/can_err" to="$(var can_ns)/can_err"/>
