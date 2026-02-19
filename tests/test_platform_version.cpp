@@ -90,6 +90,7 @@ TEST(PlatformVersion, platformToString) {
   EXPECT_STREQ("FORD_V3",          platformToString(Platform::FORD_V3));
   EXPECT_STREQ("FORD_P702R",       platformToString(Platform::FORD_P702R));
   EXPECT_STREQ("FORD_NGDV",        platformToString(Platform::FORD_NGDV));
+  EXPECT_STREQ("FORD_P708",        platformToString(Platform::FORD_P708));
   EXPECT_STREQ("FCA_RU",           platformToString(Platform::FCA_RU));
   EXPECT_STREQ("FCA_WK2",          platformToString(Platform::FCA_WK2));
   EXPECT_STREQ("GM_ISV",           platformToString(Platform::GM_ISV));
