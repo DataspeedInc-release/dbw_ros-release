@@ -6,6 +6,9 @@ float32 cmd_rate  # Rate limit, deg/s, range 0 to 1016, 0 = default, INFINITY = 
 float32 cmd_accel # Accel limit, deg/s^2, range 0 to 25400, 0 = default, INFINITY = unlimited
 uint8 cmd_type
 
+# Torque passthrough (only supported on platforms that intercept a steering actuator torque sensor and transmit the SteerTorqueOut message)
+float32 torque_passthrough # 0-100%, 0% for best control performance, 100% for best human interaction
+
 # Enable
 bool enable
 

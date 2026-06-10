@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.22)
 project(ds_dbw_can)
 
-# Default to C++17
+# Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 20)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -11,13 +11,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(can_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(ds_dbw_msgs REQUIRED)
 find_package(dataspeed_can_msg_filters REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   message(STATUS "Enabling coverage testing")
@@ -28,15 +28,20 @@ add_library(${PROJECT_NAME} SHARED
   "src/DbwNode.cpp"
   "src/CanSocket.cpp"
 )
-
-ament_target_dependencies(${PROJECT_NAME}
-  rclcpp
-  rclcpp_components
-  std_msgs
-  can_msgs
-  sensor_msgs
-  ds_dbw_msgs
-  dataspeed_can_msg_filters
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${dataspeed_can_msg_filters_INCLUDE_DIRS}>
+)
+target_link_libraries(${PROJECT_NAME}
+  ${std_msgs_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${can_msgs_TARGETS}
+  ${ds_dbw_msgs_TARGETS}
+  ${dataspeed_can_msg_filters_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_components::component
+  rclcpp_components::component_manager
 )
 
 ament_export_dependencies(
@@ -46,12 +51,6 @@ ament_export_dependencies(
   can_msgs
   sensor_msgs
   ds_dbw_msgs
-)
-
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
 )
 
 install(TARGETS ${PROJECT_NAME}
@@ -84,9 +83,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(${PROJECT_NAME}_test_can_msg_recv "tests/test_can_msg_recv.cpp")
   target_include_directories(${PROJECT_NAME}_test_can_msg_recv PUBLIC "include")
-  ament_target_dependencies(${PROJECT_NAME}_test_can_msg_recv
-    rclcpp
-    std_msgs
+  target_link_libraries(${PROJECT_NAME}_test_can_msg_recv
+    ${std_msgs_TARGETS}
+    rclcpp::rclcpp
   )
 
   ament_add_gtest(${PROJECT_NAME}_test_module_version "tests/test_module_version.cpp")
