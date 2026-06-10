@@ -1,0 +1,12 @@
+Source: ros-lyrical-ds-dbw-joystick-demo
+Section: misc
+Priority: optional
+Maintainer: "Kevin Hallenbeck" <khallenbeck@dataspeedinc.com>
+Build-Depends: debhelper (>= 9.0.0), ros-lyrical-ament-cmake, ros-lyrical-ds-dbw-msgs, ros-lyrical-rclcpp, ros-lyrical-rclcpp-components, ros-lyrical-sensor-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Homepage: http://dataspeedinc.com
+Standards-Version: 3.9.2
+
+Package: ros-lyrical-ds-dbw-joystick-demo
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-lyrical-ds-dbw-can, ros-lyrical-ds-dbw-msgs, ros-lyrical-joy, ros-lyrical-rclcpp, ros-lyrical-rclcpp-components, ros-lyrical-sensor-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Description: Demonstration of drive-by-wire with joystick
