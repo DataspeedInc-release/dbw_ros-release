@@ -19,6 +19,7 @@ GearManual gear_manual
 GearManual cmd_manual
 
 #
+bool reject_new
 bool power_latched
 bool external_control
 

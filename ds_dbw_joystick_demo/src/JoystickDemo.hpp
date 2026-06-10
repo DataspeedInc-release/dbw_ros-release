@@ -67,9 +67,7 @@ private:
   rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleCmd>::SharedPtr pub_thrtl_;
   rclcpp::Publisher<ds_dbw_msgs::msg::GearCmd>::SharedPtr pub_gear_;
   rclcpp::Publisher<ds_dbw_msgs::msg::TurnSignalCmd>::SharedPtr pub_turn_signal_;
-  #if 0
   rclcpp::Publisher<ds_dbw_msgs::msg::MiscCmd>::SharedPtr pub_misc_;
-  #endif
   rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr pub_enable_;
   rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr pub_disable_;
 
@@ -103,6 +101,12 @@ private:
   float brake_dec_ = 0;   // Rate decrease limit (changes with cmd_type)
   float thrtl_inc_ = 0;   // Rate increase limit %/s
   float thrtl_dec_ = 0;   // Rate decrease limit %/s
+
+  // Parameters
+  float steer_passthrough_ = 0; // Steer torque passthrough %
+  bool brake_precharge_ = false; // Send brake AEB precharge commands
+  bool parking_brake_ = false; // Send parking brake commands
+  bool headlights_ = true; // Send headlight commands
 
   // Command type to string
   uint8_t steerCmdType(const std::string &str) {
@@ -184,6 +188,8 @@ private:
     uint8_t door_select = 0;
     uint8_t door_action = 0;
     uint8_t brake_precharge = 0;
+    uint8_t parking_brake = 0;
+    bool headlight_high = false;
     bool steering_mult = false;
     bool steering_cal = false;
     bool joy_throttle_valid = false;
@@ -212,9 +218,10 @@ private:
     AXIS_STEER_1 = 0,
     AXIS_STEER_2 = 3,
     AXIS_TURN_SIG = 6,
+    AXIS_HAZARDS = 7,
+    AXIS_HEADLIGHTS_HIGH = 7,
     AXIS_BRAKE_PRECHARGE = 7,
-    AXIS_DOOR_SELECT = 6,
-    AXIS_DOOR_ACTION = 7,
+    AXIS_PARKING_BRAKE = 7,
     AXIS_COUNT_D = 6,
     AXIS_COUNT_X = 8,
   };
