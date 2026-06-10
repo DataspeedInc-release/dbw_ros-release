@@ -2,6 +2,36 @@
 Changelog for package ds_dbw_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2026-05-28)
+------------------
+* Bump firmware versions to match 2026/05/29 release package
+* ROS Lyrical: C++20, CMake 3.22 minimum, replace ament_target_dependencies() with target_link_libraries()
+* Add signals to RemoteReport
+* Add temperature to EcuInfo message
+* Add gear reject enumeration for startup
+* Add POLARIS RANGER XP Kinetic platform
+* Add headlights to misc command
+* Add SteerTorqueOut message with steering angle controller debug info
+* Add option to specify steering torque passthrough percent in command message
+* Add signals to PropulsionInfo message
+* Expand steering angle and torque signals as new modern messages
+  Automatically translate legacy messages into modern messages
+* Contributors: Gabe, Kevin Hallenbeck
+
+2.3.12 (2026-04-06)
+-------------------
+* Bump firmware versions to match 2026/04/06 release package
+* Add air brake message
+* Add compile time checks for signed and unsigned integer types
+* Add gear reject shift out-of-park
+* Add BrakeDual message for individual channel pressures
+* Add FCA_WK2 (2011-2021 Jeep Grand Cherokee)
+* Use last cmd_type when sending Brake/Thrtl/Steer CmdUsr to clear latched override to prevent toggling cmd_type in corresponding report
+* Add one-pedal command and status to DriveMode Cmd/Report
+* Add blackout light status
+* Add brake actuator temperature
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck, Ryan Kaddis
+
 2.3.11 (2026-02-19)
 -------------------
 * Bump firmware versions to match 2026/02/19 release package

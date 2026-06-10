@@ -21,6 +21,7 @@ bool degraded_btsi_stuck_high
 bool degraded_vehicle
 bool degraded_vehicle_speed
 bool degraded_bped_feedback
+bool degraded_actuator_pedal_sensor
 bool degraded_actuator
 bool degraded_actuator_1
 bool degraded_actuator_2
@@ -29,6 +30,9 @@ bool degraded_hold_duration
 bool degraded_actuator_aeb_deny
 bool degraded_actuator_warm
 bool degraded_calibration
+bool degraded_air_supply_1
+bool degraded_air_supply_2
+bool degraded_air_supply_pbrk
 
 # Faults
 bool fault
