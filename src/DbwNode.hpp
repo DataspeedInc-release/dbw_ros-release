@@ -59,8 +59,11 @@
 #include <ds_dbw_msgs/msg/throttle_info.hpp>
 #include <ds_dbw_msgs/msg/throttle_offset.hpp>
 #include <ds_dbw_msgs/msg/brake_info.hpp>
+#include <ds_dbw_msgs/msg/brake_dual.hpp>
+#include <ds_dbw_msgs/msg/brake_air.hpp>
 #include <ds_dbw_msgs/msg/propulsion_info.hpp>
 #include <ds_dbw_msgs/msg/steering_info.hpp>
+#include <ds_dbw_msgs/msg/steering_torque_out.hpp>
 #include <ds_dbw_msgs/msg/steering_offset.hpp>
 #include <ds_dbw_msgs/msg/ulc_cmd.hpp>
 #include <ds_dbw_msgs/msg/ulc_report.hpp>
@@ -144,7 +147,7 @@ private:
   MsgUlcCfg          msg_ulc_cfg_ = {0};
   MsgTurnSignalCmd   msg_turn_signal_cmd_ = {TurnSignal::None};
   MsgDriveModeCmd    msg_drive_mode_cmd_ = {DriveMode::Unknown};
-  MsgMiscCmd         msg_misc_cmd_ = {MsgMiscCmd::PrkBrkCmd::None};
+  MsgMiscCmd         msg_misc_cmd_ = {TurnSignal::None};
   MsgGpioGatewayCmd  msg_gpio_gateway_cmd_ = {MsgGpioCmd::GpioCmd::Passive};
   MsgGpioShiftCmd    msg_gpio_shift_cmd_ = {MsgGpioCmd::GpioCmd::Passive};
   MsgGpioMiscCmd     msg_gpio_misc_cmd_ = {MsgGpioCmd::GpioCmd::Passive};
@@ -173,10 +176,14 @@ private:
   CanMsgRecvCrcRc<MsgThrtlInfo>        msg_thrtl_info_;
   CanMsgRecvCrcRc<MsgThrtlOffset>      msg_thrtl_offset_;
   CanMsgRecvCrcRc<MsgBrakeInfo>        msg_brake_info_;
+  CanMsgRecvCrcRc<MsgBrakeDual>        msg_brake_dual_;
+  CanMsgRecvCrcRc<MsgBrakeAir>         msg_brake_air_;
   CanMsgRecvCrcRc<MsgPropulsionInfo>   msg_propulsion_info_;
   CanMsgRecvCrcRc<MsgSteerInfo>        msg_steer_info_;
+  CanMsgRecvCrcRc<MsgSteerTorqueOut>   msg_steer_torque_out_;
   CanMsgRecvCrcRc<MsgSteerOffset>      msg_steer_offset_;
   CanMsgRecvCrcRc<MsgRemoteReport>     msg_remote_rpt_;
+  CanMsgRecvCrcRc<MsgRemoteReportLegacy> msg_remote_rpt_legacy_;
   CanMsgRecvCrcRc<MsgUlcReport>        msg_ulc_rpt_;
   CanMsgRecvCrcRc<MsgAccel>            msg_accel_;
   CanMsgRecvCrcRc<MsgGyro>             msg_gyro_;
@@ -276,8 +283,8 @@ private:
 
   // Warning message helpers
   static constexpr const char * WARN_CMD_TXT = "Another node on the CAN bus is commanding the vehicle!!! Subsystem: %s, Id: 0x%03X";
-  uint8_t gear_reject_ = 0;
-  void warnRejectGear(uint8_t reject);
+  MsgGearReport1::Reject gear_reject_ = MsgGearReport1::Reject::None;
+  void warnRejectGear(MsgGearReport1::Reject reject);
   void warnBadCrcRc(bool bad_crc, bool bad_rc, const char *name);
 
   // Timeout warnings
@@ -302,6 +309,15 @@ private:
   WarnTimeout<MsgSteerCmd, MsgSteerReport1> warn_timeout_steer_ = WarnTimeout<MsgSteerCmd, MsgSteerReport1>(*this, "Steering");
   WarnTimeout<MsgBrakeCmd, MsgBrakeReport1> warn_timeout_brake_ = WarnTimeout<MsgBrakeCmd, MsgBrakeReport1>(*this, "Brake");
   WarnTimeout<MsgThrtlCmd, MsgThrtlReport1> warn_timeout_thrtl_ = WarnTimeout<MsgThrtlCmd, MsgThrtlReport1>(*this, "Throttle");
+
+  // Legacy mesages
+  enum class LegacyType : int {
+    None = 0,
+    Legacy,
+    Modern,
+  };
+  LegacyType legacy_steer_rpt_1_ = LegacyType::None;
+  LegacyType legacy_steer_offset_ = LegacyType::None;
 
   // Other oneshot warnings and prints
   bool validate_cmd_crc_rc_warned_ = false;
@@ -390,8 +406,11 @@ private:
   rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleInfo>::SharedPtr pub_thrtl_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::ThrottleOffset>::SharedPtr pub_thrtl_offset_;
   rclcpp::Publisher<ds_dbw_msgs::msg::BrakeInfo>::SharedPtr pub_brake_info_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::BrakeDual>::SharedPtr pub_brake_dual_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::BrakeAir>::SharedPtr pub_brake_air_;
   rclcpp::Publisher<ds_dbw_msgs::msg::PropulsionInfo>::SharedPtr pub_propulsion_info_;
   rclcpp::Publisher<ds_dbw_msgs::msg::SteeringInfo>::SharedPtr pub_steer_info_;
+  rclcpp::Publisher<ds_dbw_msgs::msg::SteeringTorqueOut>::SharedPtr pub_steer_torque_out_;
   rclcpp::Publisher<ds_dbw_msgs::msg::SteeringOffset>::SharedPtr pub_steer_offset_;
   rclcpp::Publisher<ds_dbw_msgs::msg::RemoteReport>::SharedPtr pub_remote_rpt_;
   rclcpp::Publisher<ds_dbw_msgs::msg::UlcReport>::SharedPtr pub_ulc_;
