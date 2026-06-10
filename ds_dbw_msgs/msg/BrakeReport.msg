@@ -40,6 +40,9 @@ bool degraded
 # Control disabled in hardware due to external electrical signal
 bool hardware_disable
 
+# Actuator temperature
+float32 actuator_temp # degC
+
 # Calculated limit vs vehicle speed
 float32 limit_value # percent, bar, or m/s^2
 

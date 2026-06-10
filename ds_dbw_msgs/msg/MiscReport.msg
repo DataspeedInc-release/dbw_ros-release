@@ -1,5 +1,8 @@
 std_msgs/Header header
 
+# Turn Signal enumeration
+TurnSignal turn_signal
+
 # Parking brake
 PrkBrkStat parking_brake
 
@@ -76,6 +79,7 @@ bool headlight_low
 bool headlight_high
 HeadlightCtrlLow headlight_low_control
 HeadlightCtrlHigh headlight_high_control
+Bool blackout
 
 # Ambient Light Sensor enumeration
 AmbientLight ambient_light

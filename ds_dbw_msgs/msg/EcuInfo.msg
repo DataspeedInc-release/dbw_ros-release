@@ -27,3 +27,7 @@ bool log_fault
 
 # Date/time
 builtin_interfaces/Time datetime
+
+# Temperature
+float32 ecu_temp   # degC
+float32 board_temp # degC

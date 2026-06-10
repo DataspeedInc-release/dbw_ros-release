@@ -2,6 +2,14 @@
 Changelog for package ds_dbw
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2026-05-28)
+------------------
+* ROS Lyrical: CMake 3.22 minimum, replace ament_target_dependencies() with target_link_libraries()
+* Contributors: Kevin Hallenbeck
+
+2.3.12 (2026-04-06)
+-------------------
+
 2.3.11 (2026-02-19)
 -------------------
 * Use curl instead of bash to download and run scripts

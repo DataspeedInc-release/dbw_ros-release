@@ -5,3 +5,4 @@ DriveMode suspension_mode_cmd
 AwdMode awd_mode_cmd
 DiffLock rear_diff_cmd
 DiffLock front_diff_cmd
+OnePedal one_pedal_cmd
