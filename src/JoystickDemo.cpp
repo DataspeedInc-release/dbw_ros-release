@@ -141,6 +141,11 @@ JoystickDemo::JoystickDemo(const rclcpp::NodeOptions &options) : rclcpp::Node("j
   thrtl_inc_ = declare_parameter("thrtl_inc", thrtl_inc_);
   thrtl_dec_ = declare_parameter("thrtl_dec", thrtl_dec_);
 
+  steer_passthrough_ = declare_parameter("steer_passthrough", steer_passthrough_);
+  brake_precharge_ = declare_parameter("brake_precharge", brake_precharge_);
+  parking_brake_ = declare_parameter("parking_brake", parking_brake_);
+  headlights_ = declare_parameter("headlights", headlights_);
+
   using std::placeholders::_1;
   sub_joy_ = create_subscription<sensor_msgs::msg::Joy>("/joy", 1, std::bind(&JoystickDemo::recvJoy, this, _1));
   sub_veh_vel_ = create_subscription<VehicleVelocity>("vehicle_velocity", 1, std::bind(&JoystickDemo::recvVehVel, this, _1));
@@ -169,9 +174,7 @@ JoystickDemo::JoystickDemo(const rclcpp::NodeOptions &options) : rclcpp::Node("j
   }
   if (misc_) {
     pub_turn_signal_ = create_publisher<TurnSignalCmd>("turn_signal/cmd", 1);
-    #if 0
     pub_misc_ = create_publisher<MiscCmd>("misc/cmd", 1);
-    #endif
   }
   if (enable_) {
     pub_enable_ = create_publisher<std_msgs::msg::Empty>("enable", 1);
@@ -245,6 +248,7 @@ void JoystickDemo::cmdCallback() {
         msg.cmd_type = steer_cmd_type_;
         msg.cmd_rate  = steer_rate_;
         msg.cmd_accel = steer_accel_;
+        msg.torque_passthrough = steer_passthrough_;
         float steering_joy = data_.steering_joy;
         if (!data_.steering_mult) {
           steering_joy *= 0.5;
@@ -277,7 +281,7 @@ void JoystickDemo::cmdCallback() {
     }
     msg.rate_inc = brake_inc_;
     msg.rate_dec = brake_dec_;
-    msg.precharge_aeb = data_.brake_precharge;
+    msg.precharge_aeb = brake_precharge_ && data_.brake_precharge;
     pub_brake_->publish(msg);
   }
 
@@ -320,7 +324,9 @@ void JoystickDemo::cmdCallback() {
             break;
           case Gear::DRIVE:
           case Gear::LOW:
-            if (gear == Gear::DRIVE || gear == Gear::LOW || velocity > -10 * KPH_TO_MPS) {
+          case Gear::SPORT:
+          case Gear::MANUAL:
+            if (gear == Gear::DRIVE || gear == Gear::LOW || gear == Gear::SPORT || gear == Gear::MANUAL || velocity > -10 * KPH_TO_MPS) {
               pub_gear_->publish(msg);
             } else {
               RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2e3, "Not sending gear command drive: Excessive vehicle velocity");
@@ -340,13 +346,16 @@ void JoystickDemo::cmdCallback() {
     msg_turn_signal.cmd.value = data_.turn_signal_cmd;
     pub_turn_signal_->publish(msg_turn_signal);
 
-    #if 0
     MiscCmd msg_misc;
-    // msg_misc.parking_brake.value = 0;
-    // msg_misc.door.select = data_.door_select;
-    // msg_misc.door.action = data_.door_action;
+    msg_misc.turn_signal.value = data_.turn_signal_cmd;
+    msg_misc.parking_brake.value = parking_brake_ ? data_.parking_brake : 0;
+    msg_misc.headlight_low.value = 0;
+    msg_misc.headlight_high.value = headlights_ && data_.headlight_high ? Bool::TRUE : Bool::UNKNOWN;
+    msg_misc.door_select.value = 0;
+    msg_misc.door_cmd.value = 0;
+    msg_misc.blackout.value = 0;
+    msg_misc.infrared.value = 0;
     pub_misc_->publish(msg_misc);
-    #endif
   }
 }
 
@@ -354,8 +363,7 @@ void JoystickDemo::recvJoy(const sensor_msgs::msg::Joy::ConstSharedPtr msg) {
   // Check for expected sizes
   if (msg->axes.size() != (size_t)AXIS_COUNT_X && msg->buttons.size() != (size_t)BTN_COUNT_X) {
     if (msg->axes.size() == (size_t)AXIS_COUNT_D && msg->buttons.size() == (size_t)BTN_COUNT_D) {
-      RCLCPP_ERROR_THROTTLE(
-          get_logger(), *get_clock(), 2e3,
+      RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 2e3,
           "Detected Logitech Gamepad F310 in DirectInput (D) mode. Please select (X) with the switch on "
           "the back to select XInput mode.");
     }
@@ -389,8 +397,6 @@ void JoystickDemo::recvJoy(const sensor_msgs::msg::Joy::ConstSharedPtr msg) {
   }
   if (msg->axes[AXIS_BRAKE_PRECHARGE] < -0.5) {
     data_.brake_precharge = BrakeCmd::PRECHARGE_LEVEL_2;
-  } else if (msg->axes[AXIS_BRAKE_PRECHARGE] > 0.5) {
-    data_.brake_precharge = BrakeCmd::PRECHARGE_LEVEL_1;
   } else {
     data_.brake_precharge = BrakeCmd::PRECHARGE_NONE;
   }
@@ -417,65 +423,51 @@ void JoystickDemo::recvJoy(const sensor_msgs::msg::Joy::ConstSharedPtr msg) {
   data_.steering_mult = msg->buttons[BTN_STEER_MULT_1] || msg->buttons[BTN_STEER_MULT_2];
   data_.steering_cal = msg->buttons[BTN_STEER_MULT_1] && msg->buttons[BTN_STEER_MULT_2];
 
-  // Turn signal
+  // Turn signal and hazards
   if (msg->axes[AXIS_TURN_SIG] != joy_.axes[AXIS_TURN_SIG]) {
-    if (std::abs(msg->axes[AXIS_DOOR_ACTION]) < 0.5) {
-      switch (data_.turn_signal_cmd) {
-        case TurnSignal::NONE:
-          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-            data_.turn_signal_cmd = TurnSignal::RIGHT;
-          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-            data_.turn_signal_cmd = TurnSignal::LEFT;
-          }
-          break;
-        case TurnSignal::LEFT:
-          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-            data_.turn_signal_cmd = TurnSignal::RIGHT;
-          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-            data_.turn_signal_cmd = TurnSignal::NONE;
-          }
-          break;
-        case TurnSignal::RIGHT:
-          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-            data_.turn_signal_cmd = TurnSignal::NONE;
-          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-            data_.turn_signal_cmd = TurnSignal::LEFT;
-          }
-          break;
+    if (std::abs(msg->axes[AXIS_HAZARDS]) < 0.5) {
+      if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+        if (data_.turn_signal_cmd != TurnSignal::LEFT) {
+          data_.turn_signal_cmd = TurnSignal::LEFT;
+        } else  {
+          data_.turn_signal_cmd = TurnSignal::NONE;
+        }
+      } else if (msg->axes[AXIS_TURN_SIG] < -0.5) {
+        if (data_.turn_signal_cmd != TurnSignal::RIGHT) {
+          data_.turn_signal_cmd = TurnSignal::RIGHT;
+        } else  {
+          data_.turn_signal_cmd = TurnSignal::NONE;
+        }
+      }
+    }
+  }
+  if (msg->axes[AXIS_HAZARDS] != joy_.axes[AXIS_HAZARDS]) {
+    if (std::abs(msg->axes[AXIS_TURN_SIG]) < 0.5) {
+      if (msg->axes[AXIS_HAZARDS] > 0.5) {
+        if (data_.turn_signal_cmd != TurnSignal::HAZARD) {
+          data_.turn_signal_cmd = TurnSignal::HAZARD;
+        } else  {
+          data_.turn_signal_cmd = TurnSignal::NONE;
+        }
       }
     }
   }
 
-  #if 0
-  // Doors and trunk
-  data_.door_select = DoorCmd::NONE;
-  data_.door_action = DoorCmd::NONE;
-  if (msg->buttons[BTN_TRUNK_OPEN]) {
-    data_.door_select = DoorCmd::TRUNK;
-    data_.door_action = DoorCmd::OPEN;
-  } else if (msg->buttons[BTN_TRUNK_CLOSE]) {
-    data_.door_select = DoorCmd::TRUNK;
-    data_.door_action = DoorCmd::CLOSE;
+  // Parking brake
+  if (msg->axes[AXIS_PARKING_BRAKE] > 0.5) {
+    data_.parking_brake = PrkBrkCmd::OFF;
+  } else if (msg->axes[AXIS_PARKING_BRAKE] < -0.5) {
+    data_.parking_brake = PrkBrkCmd::ON;
+  } else {
+    data_.parking_brake = PrkBrkCmd::NONE;
   }
-  if (msg->axes[AXIS_DOOR_ACTION] > 0.5) {
-    if (msg->axes[AXIS_DOOR_SELECT] < -0.5) {
-      data_.door_select = DoorCmd::RIGHT;
-      data_.door_action = DoorCmd::OPEN;
-    } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-      data_.door_select = DoorCmd::LEFT;
-      data_.door_action = DoorCmd::OPEN;
-    }
+
+  // Headlight high-beams
+  if (msg->axes[AXIS_HEADLIGHTS_HIGH] < -0.5) {
+    data_.headlight_high = true;
+  } else {
+    data_.headlight_high = false;
   }
-  if (msg->axes[AXIS_DOOR_ACTION] < -0.5) {
-    if (msg->axes[AXIS_DOOR_SELECT] < -0.5) {
-      data_.door_select = DoorCmd::RIGHT;
-      data_.door_action = DoorCmd::CLOSE;
-    } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-      data_.door_select = DoorCmd::LEFT;
-      data_.door_action = DoorCmd::CLOSE;
-    }
-  }
-  #endif
 
   // Optional enable and disable buttons
   if (enable_) {
