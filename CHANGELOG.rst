@@ -2,6 +2,28 @@
 Changelog for package ds_dbw_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2026-05-28)
+------------------
+* ROS Lyrical: CMake 3.22 minimum, replace ament_target_dependencies() with target_link_libraries()
+* Add signals to RemoteReport
+* Add temperature to EcuInfo message
+* Add gear reject enumeration for startup
+* Add headlights to misc command
+* Add SteerTorqueOut message with steering angle controller debug info
+* Add option to specify steering torque passthrough percent in command message
+* Add signals to PropulsionInfo message
+* Contributors: Kevin Hallenbeck
+
+2.3.12 (2026-04-06)
+-------------------
+* Add air brake message
+* Add gear reject shift out-of-park
+* Add BrakeDual message for individual channel pressures
+* Add one-pedal command and status to DriveMode Cmd/Report
+* Add blackout light status
+* Add brake actuator temperature
+* Contributors: Gabriel Oetjens, Kevin Hallenbeck, Ryan Kaddis
+
 2.3.11 (2026-02-19)
 -------------------
 * Add internal steering offset enumeration

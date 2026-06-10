@@ -8,3 +8,5 @@ uint8 OVERRIDE=4          # Override on brake, throttle, or steering
 uint8 BRAKE_HOLD=5        # Brake hold time depleted, stay in park
 uint8 VEHICLE_SPEED=6     # Excessive vehicle speed
 uint8 VEHICLE=7           # Rejected by vehicle (try pressing the brakes)
+uint8 SHIFT_OUT_OF_PARK=8 # Rejected by DBW (shift out-of-park condition not met)
+uint8 STARTUP=9           # System initializing
