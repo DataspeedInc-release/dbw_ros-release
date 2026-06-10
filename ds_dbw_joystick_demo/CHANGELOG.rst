@@ -2,6 +2,22 @@
 Changelog for package ds_dbw_joystick_demo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2026-05-28)
+------------------
+* ROS Lyrical: C++20, CMake 3.22 minimum, replace ament_target_dependencies() with target_link_libraries()
+* Map parking brake to game controller D-Pad
+  Disabled by default, overlaps with headlight high-beams and brake AEB precharge
+* Map headlight high-beams to game controller D-Pad
+  Disable overlapping brake precharge by default
+* Add headlights to misc command
+* Add option to specify steering torque passthrough percent in command message
+* Contributors: Kevin Hallenbeck
+
+2.3.12 (2026-04-06)
+-------------------
+* Map hazard lights to joystick demo game controller D-Pad up instead of brake pre-charge level 1
+* Contributors: Kevin Hallenbeck
+
 2.3.11 (2026-02-19)
 -------------------
 * Add support for larger positive ACC brake acceleration commands

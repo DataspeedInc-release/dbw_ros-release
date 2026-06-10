@@ -11,6 +11,8 @@ DiffLock rear_diff
 DiffLock rear_diff_cmd
 DiffLock front_diff
 DiffLock front_diff_cmd
+OnePedal one_pedal
+OnePedal one_pedal_cmd
 
 # Status
 bool ready # Ready to actuate command
@@ -37,3 +39,4 @@ bool support_suspension_mode_cmd
 bool support_awd_mode_cmd
 bool support_rear_diff_cmd
 bool support_front_diff_cmd
+bool support_one_pedal_cmd
