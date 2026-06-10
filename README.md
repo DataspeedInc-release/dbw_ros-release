@@ -36,12 +36,14 @@ See [joystick_demo.launch.xml](launch/joystick_demo.launch.xml) for a complete l
 * `steer_max` Steer command scale factor applied to joystick axis. Default `100.0`% (changes with the value of `steer_cmd_type`)
 * `steer_rate` Steer command rate limit in deg/s. Negative for unlimited. Default `0.0` (firmware selects default value)
 * `steer_accel` Steer command acceleration limit in deg/s^2. Negative for unlimited. Default `0.0` (firmware selects default value)
+* `steer_passthrough` Steer torque passthrough of human input in percent. Default `0.0%`
 * `brake` Send brake commands. Default `true`
 * `brake_cmd_type` Brake command type. Default `percent`. Options: `pressure` `torque` `accel` `accel_acc` `accel_aeb` `pedal_raw` `percent`
 * `brake_max` Brake command scale factor applied to joystick axis (with `brake_min`). Default `80.0`% (changes with the value of `brake_cmd_type`)
 * `brake_min` Brake command scale factor applied to joystick axis (with `brake_max`). Default `0.0`% (changes with the value of `brake_cmd_type`)
 * `brake_inc` Brake command rate limit for increase. Negative for unlimited. Default `0.0` (firmware selects default value) (units change with the value of `brake_cmd_type`)
 * `brake_dec` Brake command rate limit for decrease. Negative for unlimited. Default `0.0` (firmware selects default value) (units change with the value of `brake_cmd_type`)
+* `brake_precharge` Populate brake AEB precharge in brake command. Default `false` (overlaps with headlight and parking brake buttons)
 * `thrtl` Send throttle commands. Default `true`
 * `thrtl_cmd_type` Throttle command type. Default `percent`. Options: `pedal_raw` `percent`
 * `thrtl_max` Throttle command scale factor applied to joystick axis (with `thrtl_min`). Default `100.0`% (changes with the value of `thrtl_cmd_type`)
@@ -50,6 +52,8 @@ See [joystick_demo.launch.xml](launch/joystick_demo.launch.xml) for a complete l
 * `thrtl_dec` Throttle command rate limit for decrease in %/s. Negative for unlimited. Default `0.0` (firmware selects default value)
 * `shift` Send gear shift commands. Default `true`
 * `misc` Send misc commands (turn-signal and others). Default `true`
+* `parking_brake` Populate parking brake in misc command. Default `false` (overlaps with headlight and brake AEB precharge buttons)
+* `headlights` Populate headlight high-beam in misc command. Default `true` (overlaps with parking brake and brake AEB precharge buttons)
 * `ignore` Set ignore flag in steer/brake/thrtl command messages. Default `false`
 * `enable` Enable/disable DBW with game controller left/right bumper buttons. Default `true`
 * `buttons` Enable/disable DBW with system enable/disable buttons. Default `true`
@@ -71,5 +75,11 @@ Logitech F310 Gamepad controls:
     * Hold back or start to get full steering range, otherwise half
 * Turn Signals
     * D-Pad left/right toggle on/off
-* AEB precharge
-    * D-Pad up/down
+* Hazard lights
+    * D-Pad up toggle on/off
+* Headlight high-beams
+    * D-Pad down
+* Parking brake (disabled by default)
+    * D-Pad down (on), up (off)
+* AEB precharge (disabled by default)
+    * D-Pad down
