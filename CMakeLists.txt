@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.22)
 project(ds_dbw_msgs)
 
 # find dependencies
@@ -25,6 +25,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/fields/HeadlightCtrlHigh.msg"
   "msg/fields/HeadlightCtrlLow.msg"
   "msg/fields/Ignition.msg"
+  "msg/fields/InfraredLights.msg"
   "msg/fields/OnePedal.msg"
   "msg/fields/PrkBrkCmd.msg"
   "msg/fields/PrkBrkStat.msg"
@@ -37,8 +38,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/fields/Wiper.msg"
   "msg/Battery.msg"
   "msg/BatteryTraction.msg"
+  "msg/BrakeAir.msg"
   "msg/BrakeCmd.msg"
   "msg/BrakeDiagnostics.msg"
+  "msg/BrakeDual.msg"
   "msg/BrakeInfo.msg"
   "msg/BrakeReport.msg"
   "msg/DriveModeCmd.msg"
@@ -65,6 +68,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SteeringInfo.msg"
   "msg/SteeringOffset.msg"
   "msg/SteeringReport.msg"
+  "msg/SteeringTorqueOut.msg"
   "msg/SystemReport.msg"
   "msg/ThrottleCmd.msg"
   "msg/ThrottleDiagnostics.msg"
