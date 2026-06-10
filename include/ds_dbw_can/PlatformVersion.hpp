@@ -44,25 +44,27 @@ namespace ds_dbw_can {
 
 // Vehicle platform enumeration
 enum class Platform : uint8_t {
-  FORD_CD4         = 0x00, // Lincoln MKZ, Ford Fusion/Mondeo
-  FORD_U6          = 0x04, // Lincoln Aviator
-  FORD_CD5         = 0x05, // Ford Edge, Lincoln Nautilus
-  FORD_GE1         = 0x06, // Ford Mustang Mach-E
-  FORD_P702        = 0x07, // Ford F150 (2021+)
-  FORD_V3          = 0x08, // Ford E-Transit
-  FORD_P702R       = 0x09, // Ford F150 Raptor (2024+)
-  FORD_NGDV        = 0x0A, // Ford/Oshkosh NGDV
-  FORD_P708        = 0x0C, // Ford Super Duty (F250-F600) (2023+)
-  FCA_RU           = 0x10, // Chrysler Pacifica
-  FCA_WK2          = 0x11, // Jeep Grand Cherokee
-  GM_ISV           = 0x20, // General Motors Infantry Squad Vehicle
-  POLARIS_GEM      = 0x80, // Polaris GEM
-  POLARIS_RZRXP    = 0x81, // Polaris RZR-XP
-  POLARIS_RANGERXP = 0x82, // Polaris Ranger-XP
-  POLARIS_RZRR     = 0x83, // Polaris RZR-R
-  POLARIS_RANGERXD = 0x84, // Polaris Ranger-XD
-  POLARIS_MRZRA    = 0x85, // Polaris Polaris MRZR-Alpha
-  WAEV_GEM         = 0xA0, // Waev GEM
+  FORD_CD4          = 0x00, // Lincoln MKZ, Ford Fusion/Mondeo
+  FORD_U6           = 0x04, // Lincoln Aviator
+  FORD_CD5          = 0x05, // Ford Edge, Lincoln Nautilus
+  FORD_GE1          = 0x06, // Ford Mustang Mach-E
+  FORD_P702         = 0x07, // Ford F150 (2021+)
+  FORD_V3           = 0x08, // Ford E-Transit
+  FORD_P702R        = 0x09, // Ford F150 Raptor (2024+)
+  FORD_NGDV         = 0x0A, // Ford/Oshkosh NGDV
+  FORD_P708         = 0x0C, // Ford Super Duty (F250-F600) (2023+)
+  FCA_RU            = 0x10, // Chrysler Pacifica
+  FCA_WK2           = 0x11, // Jeep Grand Cherokee (2011-2021)
+  GM_ISV            = 0x20, // General Motors Infantry Squad Vehicle
+  RESERVED_30       = 0x30,
+  POLARIS_GEM       = 0x80, // Polaris GEM
+  POLARIS_RZRXP     = 0x81, // Polaris RZR-XP
+  POLARIS_RANGERXP  = 0x82, // Polaris Ranger-XP
+  POLARIS_RZRR      = 0x83, // Polaris RZR-R
+  POLARIS_RANGERXD  = 0x84, // Polaris Ranger-XD
+  POLARIS_MRZRA     = 0x85, // Polaris Polaris MRZR-Alpha
+  POLARIS_RANGERXPK = 0x86, // Polaris RANGER-XP Kinetic
+  WAEV_GEM          = 0xA0, // Waev GEM
   MAX
 };
 
@@ -83,26 +85,28 @@ enum class Module : uint16_t {
 
 constexpr static const char* platformToString(Platform x) {
   switch (x) {
-    case Platform::FORD_CD4:         return "FORD_CD4";
-    case Platform::FORD_U6:          return "FORD_U6";
-    case Platform::FORD_CD5:         return "FORD_CD5";
-    case Platform::FORD_GE1:         return "FORD_GE1";
-    case Platform::FORD_P702:        return "FORD_P702";
-    case Platform::FORD_V3:          return "FORD_V3";
-    case Platform::FORD_P702R:       return "FORD_P702R";
-    case Platform::FORD_NGDV:        return "FORD_NGDV";
-    case Platform::FORD_P708:        return "FORD_P708";
-    case Platform::FCA_RU:           return "FCA_RU";
-    case Platform::FCA_WK2:          return "FCA_WK2";
-    case Platform::GM_ISV:           return "GM_ISV";
-    case Platform::POLARIS_GEM:      return "POLARIS_GEM";
-    case Platform::POLARIS_RZRXP:    return "POLARIS_RZRXP";
-    case Platform::POLARIS_RANGERXP: return "POLARIS_RANGERXP";
-    case Platform::POLARIS_RZRR:     return "POLARIS_RZRR";
-    case Platform::POLARIS_RANGERXD: return "POLARIS_RANGERXD";
-    case Platform::POLARIS_MRZRA:    return "POLARIS_MRZRA";
-    case Platform::WAEV_GEM:         return "WAEV_GEM";
-    default:                         return "UNKNOWN";
+    case Platform::FORD_CD4:          return "FORD_CD4";
+    case Platform::FORD_U6:           return "FORD_U6";
+    case Platform::FORD_CD5:          return "FORD_CD5";
+    case Platform::FORD_GE1:          return "FORD_GE1";
+    case Platform::FORD_P702:         return "FORD_P702";
+    case Platform::FORD_V3:           return "FORD_V3";
+    case Platform::FORD_P702R:        return "FORD_P702R";
+    case Platform::FORD_NGDV:         return "FORD_NGDV";
+    case Platform::FORD_P708:         return "FORD_P708";
+    case Platform::FCA_RU:            return "FCA_RU";
+    case Platform::FCA_WK2:           return "FCA_WK2";
+    case Platform::GM_ISV:            return "GM_ISV";
+    case Platform::RESERVED_30:       return "RESERVED_30";
+    case Platform::POLARIS_GEM:       return "POLARIS_GEM";
+    case Platform::POLARIS_RZRXP:     return "POLARIS_RZRXP";
+    case Platform::POLARIS_RANGERXP:  return "POLARIS_RANGERXP";
+    case Platform::POLARIS_RZRR:      return "POLARIS_RZRR";
+    case Platform::POLARIS_RANGERXD:  return "POLARIS_RANGERXD";
+    case Platform::POLARIS_MRZRA:     return "POLARIS_MRZRA";
+    case Platform::POLARIS_RANGERXPK: return "POLARIS_RANGERXPK";
+    case Platform::WAEV_GEM:          return "WAEV_GEM";
+    default:                          return "UNKNOWN";
   }
 }
 

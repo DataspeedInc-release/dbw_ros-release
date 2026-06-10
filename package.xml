@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ds_dbw_can</name>
-  <version>2.3.11</version>
+  <version>2.4.0</version>
   <description>
     Interface to the Dataspeed Inc. Drive-By-Wire kit
   </description>
@@ -16,12 +16,12 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>rclcpp_components</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>can_msgs</depend>
   <depend>ds_dbw_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
 
   <build_depend>dataspeed_can_msg_filters</build_depend>
 
